@@ -6,7 +6,7 @@
 
 class BinaryRegression {
 protected:
-  Eigen::VectorXd betas;
+  Eigen::VectorXd betas, normalMean; // normalMean is used in the GP part of the program.
   RegressionPrior* prior;
   const unsigned int n;
 
@@ -38,6 +38,27 @@ public:
   // Some getters
   Eigen::VectorXd getBeta() {return betas;}
   int getSize() {return n;}
+  Eigen::VectorXd getNormalMean() {return normalMean;}
+  // Some setters
+  void setNormalMean(Eigen::VectorXd newValue) {normalMean = newValue;}
+  void setNormalMeanIndex(double newValue, long index) {normalMean(index) = newValue;}
+};
+
+class LogisticRegression : public BinaryRegression {
+  // Data augmentation
+  std::vector<double> pg;
+
+  double sample(const Eigen::MatrixXd& onesCovariates,
+                const Eigen::MatrixXd& zerosCovariates);
+  Eigen::VectorXd link(const Eigen::MatrixXd& covariates,
+                       const Eigen::VectorXd& beta,
+                       bool complementaryProb);
+
+  LogisticRegression(Eigen::VectorXd initialize) : BinaryRegression(initialize) {}
+
+public:
+  // Necessary getter
+  std::vector<double> getPolyaGamma() {return pg;}
 };
 
 #endif

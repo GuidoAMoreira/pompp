@@ -1,0 +1,12 @@
+- PresenceOnly.cpp
+-- Include all parameters update in the transition kernel (after they've been implemented)
+
+- GaussianProcess.hpp
+-- Implement recalcPrecision()
+-- Implement class NNGP
+
+- BackgroundVariables.hpp
+-- Recover covariates from set of coordinates (efficiently)
+
+- PresenceOnly.hpp
+-- Declare and implement biomass part

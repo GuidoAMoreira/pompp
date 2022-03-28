@@ -5,6 +5,8 @@
 #include "BinaryRegression.hpp"
 #include "BackgroundVariables.hpp"
 
+#define MAX_ATTEMPTS_GP 1000
+
 class PresenceOnly : public MarkovChain {
   // States
   // Regression members
@@ -20,20 +22,24 @@ class PresenceOnly : public MarkovChain {
   // Data
   const Eigen::MatrixXd x;
   const Eigen::MatrixXd xIntensity, xObservability;
-  const BackgroundVariables* bkg;
+  BackgroundVariables* bkg;
 
   // lambda star members
   double lambdaStar;
   double aL, bL;
   double updateLambdaStar();
 
+  // Marks members
+  const Eigen::VectorXd marks;
+
 public:
   PresenceOnly(const Eigen::MatrixXd& xPositions,
                const Eigen::MatrixXd& xIntensityCovs,
                const Eigen::MatrixXd& xObservabilityCovs,
-               const BackgroundVariables* bk,
+               BackgroundVariables* bk,
+               const Eigen::VectorXd& observedValues,
                double a) : area(a), x(xPositions), xIntensity(xIntensityCovs),
-               xObservability(xObservabilityCovs), bkg(bk) {}
+               xObservability(xObservabilityCovs), bkg(bk), marks(observedValues) {}
 
 protected:
   double applyTransitionKernel();
