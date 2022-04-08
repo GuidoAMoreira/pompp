@@ -86,6 +86,31 @@ double PresenceOnly::sampleProcesses() {
   return - lgamma(accXp + 1) - lgamma(accU + 1);
 }
 
+double PresenceOnly::updateMarks(const Eigen::VectorXd& gp) {
+  double out, sqrtMarksNugget = sqrt(marksNugget);
+
+  Eigen::VectorXd propLogExpected(gp.size());
+  marksPrime = Eigen::VectorXd(xprime.rows());
+
+#ifdef _OPENMP
+#pragma omp parallel for nowait
+#endif
+  for (int i = 0; i < marks.size(); i++) {
+    propLogExpected(i) = R::rnorm(marksMu, sqrtMarksNugget) + gp(i);
+  }
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+  for (int i = marks.size(), j = 0; i < gp.size(); i++, j++) {
+    propLogExpected(i) = R::rnorm(marksMu, sqrtMarksNugget) + gp(i);
+    marksPrime(j) = R::rgamma(marksShape, marksShape / propLogExpected(i));
+  }
+
+
+
+
+}
+
 inline double PresenceOnly::applyTransitionKernel() {
   double out, privateOut1, privateOut2;
   out = sampleProcesses() + updateLambdaStar();

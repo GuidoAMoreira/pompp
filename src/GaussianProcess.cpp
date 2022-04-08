@@ -49,6 +49,10 @@ double GaussianProcess::updateCovarianceParameters() {
   } else return logDensity;
 }
 
+Eigen::MatrixXd GaussianProcess::recalcPrecision(std::vector<double> newParams) {
+  return Eigen::MatrixXd(0, 0);
+}
+
 void GaussianProcess::acceptNewPoint() {
   int n = augmentedValues.size();
   augmentedValues.resize(n + 1);
@@ -85,7 +89,7 @@ void GaussianProcess::closeUp() {
 
 Eigen::VectorXd GaussianProcess::calcDist(Eigen::VectorXd p1, Eigen::VectorXd p2) {
   double temp, d = 0;
-  for (int i = 0; i < p1.size(); i++) {
+  for (int i = 0; i < 2; i++) {
     temp = p1(i) - p2(i);
     d += temp * temp;
   }

@@ -1,12 +1,9 @@
 - PresenceOnly.cpp
 -- Include all parameters update in the transition kernel (after they've been implemented)
+-- Figure out how to include the marks factor in the points accept-reject algorithms (required for the sampling to be exact)
 
 - GaussianProcess.hpp
--- Implement recalcPrecision()
 -- Implement class NNGP
-
-- BackgroundVariables.hpp
--- Recover covariates from set of coordinates (efficiently)
 
 - PresenceOnly.hpp
 -- Declare and implement biomass part

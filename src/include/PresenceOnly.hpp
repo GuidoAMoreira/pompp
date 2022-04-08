@@ -31,6 +31,10 @@ class PresenceOnly : public MarkovChain {
 
   // Marks members
   const Eigen::VectorXd marks;
+  const double marksShapePriora, marksShapePriorb;
+  Eigen::VectorXd marksPrime, marksExpected;
+  double marksMu, marksShape, marksNugget, previousMarksLogDens;
+  double updateMarks(const Eigen::VectorXd& gp);
 
 public:
   PresenceOnly(const Eigen::MatrixXd& xPositions,
@@ -38,8 +42,11 @@ public:
                const Eigen::MatrixXd& xObservabilityCovs,
                BackgroundVariables* bk,
                const Eigen::VectorXd& observedValues,
-               double a) : area(a), x(xPositions), xIntensity(xIntensityCovs),
-               xObservability(xObservabilityCovs), bkg(bk), marks(observedValues) {}
+               double a, double mpa, double mpb) : area(a), x(xPositions),
+               xIntensity(xIntensityCovs),
+               xObservability(xObservabilityCovs), bkg(bk),
+               marks(observedValues), marksShapePriora(mpa),
+               marksShapePriorb(mpb), previousMarksLogDens(-INFINITY) {}
 
 protected:
   double applyTransitionKernel();

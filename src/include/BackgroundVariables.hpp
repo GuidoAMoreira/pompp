@@ -119,10 +119,11 @@ public:
 
   // First coordinate is the random row and second is irrelevant.
   Eigen::VectorXd getRandomPoint() {
-    Eigen::VectorXd out(2);
+    Eigen::VectorXd out(3);
     long selectedRow = long(R::runif(0, 1) * rows);
     out(0) = data[longCol][selectedRow];
     out(1) = data[latCol][selectedRow];
+    out(2) = selectedRow;
     return out;
   }
 
@@ -134,7 +135,7 @@ public:
 #pragma omp parallel for
 #endif
     for (int j = 0; j < columns.size(); j++)
-      out(j) = data[j][coordinates(0)];
+      out(j) = data[columns[j]][coordinates(2)];
     return out;
   }
 };
