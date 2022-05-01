@@ -20,11 +20,11 @@ public:
   GaussianProcess(Eigen::MatrixXd pos, int s) : xSize(s), tempSize(0), positions(pos) {}
 
   double getNewPoint(Eigen::VectorXd coords) {sampleNewPoint(coords); return propValue;}
-  virtual void acceptNewPoint();
+  void acceptNewPoint();
 
   // Methods to update which points are data augmentation.
-  virtual void startUp();
-  virtual void closeUp();
+  void startUp();
+  void closeUp();
 protected:
   const int xSize; // Used in start up and close up
   int tempAcc, tempSize; // Used in start up and close up
@@ -38,11 +38,25 @@ protected:
   Eigen::VectorXd propCovariances;
   double propValue;
 
-  Eigen::VectorXd calcDist(Eigen::VectorXd p1, Eigen::VectorXd p2);
+  double calcDist(Eigen::VectorXd p1, Eigen::VectorXd p2);
 };
 
 class NNGP : public GaussianProcess {
+  void sampleNewPoint(Eigen::VectorXd coords);
+  Eigen::MatrixXd recalcPrecision(std::vector<double> newParams); // Used in updateCovarianceParameter()
 
+  // Neighborhood members
+  const int neighborhoodSize;
+  Eigen::VectorXd distances, D;
+  std::vector<int> getNeighorhood(Eigen::VectorXd coords);
+  Eigen::SparseMatrix<double> IminusA;
+  Eigen::LLT<Eigen::MatrixXd> sqrtC;
+  Eigen::MatrixXd pastCovariancesPositions, pastCovariances;
+  int thisPosition;
+
+public:
+  NNGP(Eigen::MatrixXd pos, int s, int M) : GaussianProcess(pos, s),
+    neighborhoodSize(M) {}
 };
 
 #endif

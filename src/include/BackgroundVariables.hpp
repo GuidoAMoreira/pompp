@@ -52,6 +52,10 @@ public:
     }
     return Eigen::VectorXd(0);
   }
+  Eigen::VectorXd getGP(int type) {
+    if (type == INTENSITY_VARIABLES) return spatialProcessInt->getValues();
+    if (type == OBSERVABILITY_VARIABLES) return spatialProcessObs->getValues();
+  }
   // Setters
   void setGP(GaussianProcess* gp, int type) {
     if (type == INTENSITY_VARIABLES) {

@@ -1,9 +1,6 @@
-- PresenceOnly.cpp
--- Include all parameters update in the transition kernel (after they've been implemented)
--- Figure out how to include the marks factor in the points accept-reject algorithms (required for the sampling to be exact)
-
 - GaussianProcess.hpp
 -- Implement class NNGP
+-- Make the newPoint into a proposal, to be confirmed later
 
-- PresenceOnly.hpp
--- Declare and implement biomass part
+- PresenceOnly.cpp
+-- Update Gaussian Processes based on joint distribution
