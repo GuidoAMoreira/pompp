@@ -51,7 +51,7 @@ class NNGP : public GaussianProcess {
   std::vector<int> getNeighorhood(Eigen::VectorXd coords);
   Eigen::SparseMatrix<double> IminusA;
   Eigen::LLT<Eigen::MatrixXd> sqrtC;
-  Eigen::MatrixXd pastCovariancesPositions, pastCovariances;
+  Eigen::MatrixXd pastCovariancesPositions, pastCovariances, propPrecision;
   int thisPosition;
 
 public:

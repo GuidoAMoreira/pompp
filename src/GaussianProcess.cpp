@@ -84,7 +84,7 @@ void GaussianProcess::closeUp() {
   covariances.block(xSize, 0, tempAcc, xSize) =
     augmentedCovariances.block(0, bigSize - tempAcc, xSize, tempAcc);
   covariances.block(0, xSize, xSize, tempAcc) =
-    augmentedCovariances.block(bigSize - tempAcc, 0, tempAcc, xSize);index
+    augmentedCovariances.block(bigSize - tempAcc, 0, tempAcc, xSize);
 }
 
 double GaussianProcess::calcDist(Eigen::VectorXd p1, Eigen::VectorXd p2) {
@@ -98,39 +98,41 @@ double GaussianProcess::calcDist(Eigen::VectorXd p1, Eigen::VectorXd p2) {
 
 void NNGP::sampleNewPoint(Eigen::VectorXd coords) {
   distances = Eigen::VectorXd(augmentedPositions.rows());
-  std::fill(distances.begin(), distances.end(), 0);
+  std::fill(distances.data(), distances.data() + distances.size(), 0);
   std::vector<int> neighborhood = getNeighorhood(coords);
-  Eigen::MatrixXd conditionalCovariance(neighborhoodSize, neighborhoodSize), temp;
+  propPrecision = Eigen::MatrixXd(neighborhoodSize, neighborhoodSize);
+  Eigen::MatrixXd temp;
   Eigen::VectorXd covariances(neighborhoodSize);
-  Eigen::RowVectorXd::InnerIterator finder;
   double d;
   thisPosition++;
 
 #ifdef _OPENMP
-#pragma omp parallel for private(j, finder) collapse(2)
+#pragma omp parallel for private(j) collapse(2)
 #endif
   for (int i = 0; i < neighborhoodSize; i++) {
     for (int j = 0; j < i; j++) {
-      finder = std::find(
-        pastCovariancesPositions.row(neighborhood[i]).begin(),
-        pastCovariancesPositions.row(neighborhood[i]).end(),
+      double* finder = std::find(
+        pastCovariancesPositions.row(neighborhood[i]).data(),
+        pastCovariancesPositions.row(neighborhood[i]).data() +
+          pastCovariancesPositions.cols(),
         neighborhood[j]
       );
-      conditionalCovariance(i, j) =
-        finder != pastCovariancesPositions.row(neighborhood[i]).end() ?
+      propPrecision(i, j) =
+        finder != pastCovariancesPositions.row(neighborhood[i]).data() +
+        pastCovariancesPositions.cols() ?
           pastCovariances(neighborhood[i], std::distance(
-              pastCovariancesPositions.row(neighborhood[i]).begin(),
+              pastCovariancesPositions.row(neighborhood[i]).data(),
               finder
           ) - 1) :
         (*covFun)(calcDist(augmentedPositions.row(neighborhood[i]).transpose(),
                   augmentedPositions.row(neighborhood[j]).transpose()));
-      conditionalCovariance(j, i) = conditionalCovariance(i, j);
+      propPrecision(j, i) = propPrecision(i, j);
     }
-    conditionalCovariance(i, i) = covFun->getSigma2();
-    covariances(i) = (*covFun)(distances(neighborhood(i)));
+    propPrecision(i, i) = covFun->getSigma2();
+    covariances(i) = (*covFun)(distances(neighborhood[i]));
     pastCovariancesPositions(thisPosition, i) = covariances(i);
   }
-  temp = conditionalCovariance.llt().solve(covariances);
+  temp = propPrecision.llt().solve(covariances);
   D(thisPosition) = covFun->getSigma2() -
     (covariances.transpose() * temp)(0);
 
@@ -140,7 +142,7 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords) {
 #endif
   for (int i = 0; i < neighborhoodSize; i++)
     t += augmentedValues(neighborhood[i]) * temp(i);
-  augmentedValues(thisPosition) = Rf_rnorm(t, sqrt(D(thisPosition)));
+  propValue = Rf_rnorm(t, sqrt(D(thisPosition)));
 }
 
 std::vector<int> NNGP::getNeighorhood(Eigen::VectorXd coords) {
