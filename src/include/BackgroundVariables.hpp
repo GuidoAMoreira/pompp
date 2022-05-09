@@ -69,6 +69,16 @@ public:
     }
   }
 
+  // Resampler
+  void resampleGPs(double marksMu, Eigen::VectorXd marksExpected,
+                   double marksVariance,
+                   Eigen::VectorXd betasPart, Eigen::VectorXd pgs) {
+    if (useGPint) spatialProcessInt->resampleGP(marksMu, marksExpected,
+        marksVariance, betasPart, pgs);
+    if (useGPobs) spatialProcessObs->resampleGP(marksMu, marksExpected,
+        marksVariance, betasPart, pgs);
+  }
+
   // Random point (for point process simulation)
   virtual Eigen::VectorXd getRandomPoint() = 0;
   Eigen::MatrixXd getRandomPoint(int size) {

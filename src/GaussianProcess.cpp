@@ -64,11 +64,12 @@ void GaussianProcess::acceptNewPoint() {
   tempAcc++;
 }
 
-void GaussianProcess::startUp() {
+void GaussianProcess::startUp(int howMany) {
   tempAcc = 0;
   augmentedPositions = positions;
   augmentedValues = values;
   augmentedCovariances = covariances;
+  augmentedCovariances.reserve(howMany, howMany);
 }
 
 void GaussianProcess::closeUp() {
@@ -97,14 +98,12 @@ double GaussianProcess::calcDist(Eigen::VectorXd p1, Eigen::VectorXd p2) {
 }
 
 void NNGP::sampleNewPoint(Eigen::VectorXd coords) {
-  distances = Eigen::VectorXd(augmentedPositions.rows());
+  distances = Eigen::MatrixXd::Constant(augmentedPositions.rows(), 1, 0);
   std::fill(distances.data(), distances.data() + distances.size(), 0);
-  std::vector<int> neighborhood = getNeighorhood(coords);
+  neighborhood = getNeighorhood(coords);
   propPrecision = Eigen::MatrixXd(neighborhoodSize, neighborhoodSize);
-  Eigen::MatrixXd temp;
   Eigen::VectorXd covariances(neighborhoodSize);
   double d;
-  thisPosition++;
 
 #ifdef _OPENMP
 #pragma omp parallel for private(j) collapse(2)
@@ -130,19 +129,19 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords) {
     }
     propPrecision(i, i) = covFun->getSigma2();
     covariances(i) = (*covFun)(distances(neighborhood[i]));
-    pastCovariancesPositions(thisPosition, i) = covariances(i);
+    pastCovariancesPositions(tempAcc, i) = covariances(i);
   }
-  temp = propPrecision.llt().solve(covariances);
-  D(thisPosition) = covFun->getSigma2() -
-    (covariances.transpose() * temp)(0);
+  Arow = propPrecision.llt().solve(covariances);
+  D(tempAcc) = covFun->getSigma2() -
+    (covariances.transpose() * Arow)(0);
 
   double t = 0;
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+:t)
 #endif
   for (int i = 0; i < neighborhoodSize; i++)
-    t += augmentedValues(neighborhood[i]) * temp(i);
-  propValue = Rf_rnorm(t, sqrt(D(thisPosition)));
+    t += augmentedValues(neighborhood[i]) * Arow(i);
+  propValue = Rf_rnorm(t, sqrt(D(tempAcc)));
 }
 
 std::vector<int> NNGP::getNeighorhood(Eigen::VectorXd coords) {
@@ -159,4 +158,34 @@ std::vector<int> NNGP::getNeighorhood(Eigen::VectorXd coords) {
                      });
 
   return std::vector<int>(output.begin(), output.begin() + neighborhoodSize - 1);
+}
+
+void NNGP::acceptNewPoint() {
+  int n = augmentedValues.size();
+  tempAcc++;
+  for (int i = 0; i < neighborhoodSize; i++)
+    trips.push_back(Eigen::Triplet<double>(tempAcc, i, -Arow(i)));
+  trips.push_back(Eigen::Triplet<double>(tempAcc, tempAcc, 1.));
+  augmentedValues.resize(n + 1);
+  augmentedValues(n) = propValue;
+}
+
+void NNGP::startUp(int howMany) {
+  tempAcc = xSize;
+  augmentedPositions = positions;
+  augmentedValues = values;
+  trips = std::vector<Eigen::Triplet<double> >(neighborhoodSize * howMany);
+  bootUpIminusA();
+}
+
+void NNGP::closeUp() {
+  int newSize = xSize + tempAcc;
+  int bigSize = augmentedCovariances.rows();
+  positions.resize(newSize);
+  positions.bottomRows(tempAcc) = augmentedPositions.bottomRows(tempAcc);
+  values.resize(newSize);
+  values.tail(tempAcc) = augmentedValues.tail(tempAcc);
+  IminusA.setFromTriplets(trips.begin(), trips.end());
+  IminusA.makeCompressed();
+  precision = IminusA * D.asDiagonal() * IminusA.transpose();
 }

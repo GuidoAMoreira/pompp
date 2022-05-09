@@ -39,6 +39,7 @@ public:
   Eigen::VectorXd getBeta() {return betas;}
   int getSize() {return n;}
   Eigen::VectorXd getNormalMean() {return normalMean;}
+  virtual Eigen::VectorXd getExtra() = 0; // For data augmentation variables
   // Some setters
   void setNormalMean(Eigen::VectorXd newValue) {normalMean = newValue;}
   void setNormalMeanIndex(double newValue, long index) {normalMean(index) = newValue;}
@@ -48,17 +49,18 @@ class LogisticRegression : public BinaryRegression {
   // Data augmentation
   std::vector<double> pg;
 
+  // Necessary getter
+  std::vector<double> getPolyaGamma() {return pg;}
+public:
+  Eigen::VectorXd getExtra() {return normalMean;}
+
+  LogisticRegression(Eigen::VectorXd initialize) : BinaryRegression(initialize) {}
+
   double sample(const Eigen::MatrixXd& onesCovariates,
                 const Eigen::MatrixXd& zerosCovariates);
   Eigen::VectorXd link(const Eigen::MatrixXd& covariates,
                        const Eigen::VectorXd& beta,
                        bool complementaryProb);
-
-  LogisticRegression(Eigen::VectorXd initialize) : BinaryRegression(initialize) {}
-
-public:
-  // Necessary getter
-  std::vector<double> getPolyaGamma() {return pg;}
 };
 
 #endif

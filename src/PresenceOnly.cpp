@@ -179,5 +179,7 @@ inline double PresenceOnly::applyTransitionKernel() {
 #endif
   privateOut2 = delta->sample(xObservability, xprimeObservability);
 }
+  bkg->resampleGPs(marksMu, marksExpected,
+                   marksNugget, beta->getNormalMean(), beta->getExtra());
   return out + privateOut1 + privateOut2;
 }

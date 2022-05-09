@@ -48,7 +48,7 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
     pg[n1 + i] = PG.draw_like_devroye(xb0(i));
     priV += pg[n1 + i] * x0.row(i).transpose() * x0.row(i);
     priMed -= x0.row(i) * 0.5;
-    setNormalMeanIndex(-0.5 - (xb0(i) - x0(i, n - 1) * betas(n)) * pg[n1 + i], i);
+    setNormalMeanIndex(-0.5 - (xb0(i) - x0(i, n - 1) * betas(n)) * pg[n1 + i], n1 + i);
   }
 #ifdef _OPENMP
 #pragma omp critical
