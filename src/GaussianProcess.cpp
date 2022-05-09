@@ -97,6 +97,20 @@ double GaussianProcess::calcDist(Eigen::VectorXd p1, Eigen::VectorXd p2) {
   return sqrt(d);
 }
 
+void GaussianProcess::resampleGP(double marksMu, Eigen::VectorXd marksExpected,
+                                 double marksVariance,
+                                 Eigen::VectorXd betasPart, Eigen::VectorXd pgs) {
+  int n = marksExpected.size();
+  Eigen::VectorXd temp = Eigen::MatrixXd::Constant(n, 1, 1 / marksVariance);
+  Eigen::MatrixXd newPrec = covariances.inverse() + pgs + temp;
+
+  values = newPrec.llt().matrixL().inverse().transpose() *
+    Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(n, 0, 1)) +
+    betasPart + (marksExpected.array().log() .- marksMu) / marksVariance;
+}
+
+//// NNGP starts here ////
+
 void NNGP::sampleNewPoint(Eigen::VectorXd coords) {
   distances = Eigen::MatrixXd::Constant(augmentedPositions.rows(), 1, 0);
   std::fill(distances.data(), distances.data() + distances.size(), 0);
@@ -188,4 +202,16 @@ void NNGP::closeUp() {
   IminusA.setFromTriplets(trips.begin(), trips.end());
   IminusA.makeCompressed();
   precision = IminusA * D.asDiagonal() * IminusA.transpose();
+}
+
+void NNGP::resampleGP(double marksMu, Eigen::VectorXd marksExpected,
+                      double marksVariance,
+                      Eigen::VectorXd betasPart, Eigen::VectorXd pgs) {
+  int n = marksExpected.size();
+  Eigen::VectorXd temp = Eigen::MatrixXd::Constant(n, 1, 1 / marksVariance);
+  Eigen::SparseMatrix<double> newPrec = precision + pgs + temp;
+  sqrtC.compute(newPrec);
+  values = sqrtC.matrixU().triangularView<Eigen::Upper>.solve(
+      Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(n, 0, 1))
+  ) + betasPart + (marksExpected.array().log() .- marksMu) / marksVariance;
 }

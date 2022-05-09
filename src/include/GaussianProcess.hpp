@@ -56,7 +56,7 @@ class NNGP : public GaussianProcess {
   std::vector<int> getNeighorhood(Eigen::VectorXd coords);
   Eigen::SparseMatrix<double> IminusA, precision;
   std::vector<Eigen::Triplet<double> > trips;
-  Eigen::LLT<Eigen::MatrixXd> sqrtC;
+  Eigen::SimplicialLLT<Eigen::SparseMatrix<double> > sqrtC;
   Eigen::MatrixXd pastCovariancesPositions, pastCovariances, propPrecision;
   int thisPosition;
 
@@ -68,6 +68,10 @@ public:
   // Methods to update which points are data augmentation.
   void startUp(int howMany);
   void closeUp();
+
+  void resampleGP(double marksMu, Eigen::VectorXd marksExpected,
+                  double marksVariance,
+                  Eigen::VectorXd betasPart, Eigen::VectorXd pgs);
 };
 
 #endif
