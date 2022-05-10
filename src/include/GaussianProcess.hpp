@@ -32,7 +32,7 @@ protected:
   const int xSize; // Used in start up and close up
   int tempAcc, tempSize; // Used in start up and close up
   int parameterSize, currentIndex;
-  Eigen::MatrixXd positions, covariances, precision, augmentedPositions, augmentedCovariances;
+  Eigen::MatrixXd positions, covariances, augmentedPositions, augmentedCovariances;
   Eigen::VectorXd values, augmentedValues;
   CovarianceFunction* covFun;
   double logDensity;
