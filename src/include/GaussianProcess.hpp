@@ -52,13 +52,14 @@ class NNGP : public GaussianProcess {
   // Neighborhood members
   const int neighborhoodSize;
   std::vector<int> neighborhood;
-  Eigen::VectorXd distances, D, Arow;
+  Eigen::VectorXd distances, D, Arow, propPosition, theseCovariances;
   std::vector<int> getNeighorhood(Eigen::VectorXd coords);
   Eigen::SparseMatrix<double> IminusA, precision;
   std::vector<Eigen::Triplet<double> > trips;
   Eigen::SimplicialLLT<Eigen::SparseMatrix<double> > sqrtC;
   Eigen::MatrixXd pastCovariancesPositions, pastCovariances, propPrecision;
   int thisPosition;
+  double propD;
 
 public:
   NNGP(Eigen::MatrixXd pos, int s, int M) : GaussianProcess(pos, s),

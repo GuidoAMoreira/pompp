@@ -89,9 +89,9 @@ public:
   }
 
   // Related to spatial Gaussian Processes
-  void startGPs() {
-    if (useGPint) spatialProcessInt->startUp();
-    if (useGPobs) spatialProcessObs->startUp();
+  void startGPs(int howMany) {
+    if (useGPint) spatialProcessInt->startUp(howMany);
+    if (useGPobs) spatialProcessObs->startUp(howMany);
   }
   void acceptNewPoint(int type) {
     if (type == INTENSITY_VARIABLES && useGPint)

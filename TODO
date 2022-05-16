@@ -1,3 +1,8 @@
-- GaussianProcess.hpp
--- Make the newPoint into a proposal, to be confirmed later
--- Double check variables in NNGP start up and close up
+**WARNING**
+Sampling of marksExpected and marksMu is probabilistically incorrect. Must be addressed
+
+-- PresenceOnly.cpp
+- Write a placeholder for metropolisExpected().
+
+-- ?
+- Write an R wrapper

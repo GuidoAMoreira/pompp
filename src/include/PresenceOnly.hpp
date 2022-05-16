@@ -37,6 +37,10 @@ class PresenceOnly : public MarkovChain {
   Eigen::VectorXd marksPrime, marksExpected;
   double marksMu, marksShape, marksNugget;
   double updateMarks(const Eigen::VectorXd& gp);
+  double metropolisExpected(double mark, double gpv, double sd);
+
+  // Inherited
+  double applyTransitionKernel();
 
 public:
   PresenceOnly(const Eigen::MatrixXd& xPositions,
@@ -52,9 +56,6 @@ public:
                marks(observedValues), marksMuPriormu(mmm), marksMuPriors2(mms2),
                marksNuggetPriora(mna), marksNuggetPriorb(mnb),
                marksShapePriora(mpa), marksShapePriorb(mpb) {}
-
-protected:
-  double applyTransitionKernel();
 };
 
 #endif

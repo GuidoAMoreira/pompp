@@ -114,11 +114,11 @@ void GaussianProcess::resampleGP(double marksMu, Eigen::VectorXd marksExpected,
 void NNGP::sampleNewPoint(Eigen::VectorXd coords) {
   R_CheckUserInterrupt();
 
-  distances = Eigen::MatrixXd::Constant(augmentedPositions.rows(), 1, 0);
+  propPosition = coords;
+  distances = Eigen::MatrixXd::Constant(augmentedPositions.rows(), 1, 0); // Filled in getNeighborhood function
   neighborhood = getNeighorhood(coords);
   propPrecision = Eigen::MatrixXd(neighborhoodSize, neighborhoodSize);
-  Eigen::VectorXd theseCovariances(neighborhoodSize);
-  double d;
+  theseCovariances = Eigen::VectorXd(neighborhoodSize);
 
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -142,12 +142,11 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords) {
                   augmentedPositions.row(neighborhood[j]).transpose()));
       propPrecision(j, i) = propPrecision(i, j);
     }
-    (i, i) = covFun->getSigma2();
+    propPrecision(i, i) = covFun->getSigma2();
     theseCovariances(i) = (*covFun)(distances(neighborhood[i]));
-    pastCovariancesPositions(tempAcc, i) = covariances(i);
   }
   Arow = propPrecision.llt().solve(theseCovariances);
-  D(tempAcc) = covFun->getSigma2() -
+  propD = covFun->getSigma2() -
     (theseCovariances.transpose() * Arow)(0);
 
   double t = 0;
@@ -156,7 +155,7 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords) {
 #endif
   for (int i = 0; i < neighborhoodSize; i++)
     t += augmentedValues(neighborhood[i]) * Arow(i);
-  propValue = Rf_rnorm(t, sqrt(D(tempAcc)));
+  propValue = Rf_rnorm(t, sqrt(propD));
 }
 
 std::vector<int> NNGP::getNeighorhood(Eigen::VectorXd coords) {
@@ -181,28 +180,39 @@ void NNGP::acceptNewPoint() {
   for (int i = 0; i < neighborhoodSize; i++)
     trips.push_back(Eigen::Triplet<double>(tempAcc, neighborhood[i], -Arow(i)));
   trips.push_back(Eigen::Triplet<double>(tempAcc, tempAcc, 1.));
-  augmentedValues.resize(n + 1);
-  augmentedValues(n) = propValue;
+  augmentedValues.push_back(propValue);
+  augmentedPositions.conservativeResize(augmentedPositions.rows() + 1, Eigen::NoChange_t);
+  augmentedPositions.row(n) = propPosition.transpose();
+  pastCovariancesPositions.conservativeResize(pastCovariancesPositions.rows() + 1, Eigen::NoChange_t);
+  pastCovariancesPositions.row(n) = Eigen::VectorXd(neighborhood.data(), neighborhoodSize).transpose();
+  pastCovariances.conservativeResize(pastCovariances.rows() + 1, Eigen::NoChange_t);
+  pastCovariances.row(n) = theseCovariances.transpose();
+  augmentedPositions.conservativeResize(augmentedPositions.rows() + 1, Eigen::NoChange_t);
+  augmentedPositions.row(n) = propPosition.transpose();
+  D.push_back(propD);
 }
 
 void NNGP::startUp(int howMany) {
   tempAcc = xSize;
   augmentedPositions = positions;
+  augmentedPositions.reserve((xSize + howMany) * 2);
   augmentedValues = values;
-  trips = std::vector<Eigen::Triplet<double> >(neighborhoodSize * howMany);
+  augmentedValues.reserve(xSize + howMany);
+  trips = std::vector<Eigen::Triplet<double> >(xSize * xSize + neighborhoodSize * howMany);
+  D.reserve(xSize + howMany);
   bootUpIminusA();
 }
 
 void NNGP::closeUp() {
   int newSize = xSize + tempAcc;
-  int bigSize = augmentedCovariances.rows();
-  positions.resize(newSize);
-  positions.bottomRows(tempAcc) = augmentedPositions.bottomRows(tempAcc);
-  values.resize(newSize);
-  values.tail(tempAcc) = augmentedValues.tail(tempAcc);
   IminusA.setFromTriplets(trips.begin(), trips.end());
   IminusA.makeCompressed();
-  precision = IminusA * D.asDiagonal() * IminusA.transpose();
+  precision = IminusA * D.asDiagonal().inverse() * IminusA.transpose();
+
+  // Close up the extra spaces
+  trips = std::vector<Eigen::Triplet<double> >(0);
+  D = Eigen::VectorXd(0);
+  augmentedValues.conservativeResize(tempAcc);
 }
 
 void NNGP::resampleGP(double marksMu, Eigen::VectorXd marksExpected,
@@ -220,7 +230,6 @@ void NNGP::resampleGP(double marksMu, Eigen::VectorXd marksExpected,
 void NNGP::bootUpIminusA() {
   Eigen::VectorXd temp;
   covariances = Eigen::MatrixXd(xSize, xSize);
-
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -235,13 +244,14 @@ void NNGP::bootUpIminusA() {
 
   Eigen::LDLT<Eigen::MatrixXd miniSolver;
   miniSolver.compute(covariances);
-  D.head(xSize) = miniSolver.vectorD();
+  Eigen::MatrixXd miniIminusA = miniSolver.matrixL().triangularView<Eigen::Lower>.inverse();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
   for (int i = 0; i < xSize; i++) {
     for (int j = 0; j < i; j++)
-      trips.push_back(Eigen::Triplet<double>(i, j, miniSolver.matrixL()(i, j)));
+      trips.push_back(Eigen::Triplet<double>(i, j, miniIminusA(i, j)));
     trips.push_back(Eigen::Triplet<double>(i, i, 1.));
+    D.push_back(miniSolver.vectorD()(i));
   }
 }
