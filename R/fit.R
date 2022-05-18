@@ -4,7 +4,7 @@ fit_pompp <- function(beta, delta, lambda, bPriorPar, dPriorPar, lPriorPar,
                       covariatesMatrix, area, marksMuPriorPar, marksNuggetPriorPar,
                       marksShapePriorPar, observedCovariatesMatrix, observedMarks,
                       observedPositions, intensityColumns, observabilityColumns,
-                      xIntensityColumns, xObservabilityColumns,
+                      xIntensityColumns, xObservabilityColumns, neighborhoodSize,
                       longitudeColumns, latitudeColumns, burnin, thin, iter) {
   cppPOMPP(
     beta, delta, lambda, "", "", "", bPriorPar, dPriorPar, lPriorPar$a,
@@ -12,7 +12,7 @@ fit_pompp <- function(beta, delta, lambda, bPriorPar, dPriorPar, lPriorPar,
     marksMuPriorPar$variance, marksNuggetPriorPar$a, marksNuggetPriorPar$b,
     marksShapePriorPar$a, marksShapePriorPar$b, observedCovariatesMatrix,
     observedMarks, observedPositions, intensityColumns, observabilityColumns,
-    xIntensityColumns, xObservabilityColumns, longitudeColumns, latitudeColumns,
+    xIntensityColumns, xObservabilityColumns, neighborhoodSize, longitudeColumns, latitudeColumns,
     burnin, thin, iter, parallel::detectCores(), TRUE
   )
 }

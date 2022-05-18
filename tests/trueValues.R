@@ -10,4 +10,4 @@ sigma2 <- 2
 
 #### Meta parameters ####
 gridSize <- 100
-squareGrid <- expand.grid(seq(0, 1, len = gridSize), seq(0, 1, len = gridSize))
+squareGrid <- as.matrix(expand.grid(seq(0, 1, len = gridSize), seq(0, 1, len = gridSize)))

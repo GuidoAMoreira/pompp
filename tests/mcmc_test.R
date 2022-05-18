@@ -1,24 +1,22 @@
-library(geoR)
+library(pompp)
+set.seed(123)
+setwd("/home/anthorg/Documents/Work/pkg/pompp")
 
-#### True values ####
-beta <- c(1, -1, 2, -1.5)
-delta <- c(-1, -1, -2)
-lambdaStar <- 1000
-gamma <- 2
-shape <- 1.5
-nugget <- 0.5
-mu <- 5
+#### Read data ####
+simulated <- readRDS("tests/data/simulatedData.rds")
 
-#### Meta parameters ####
-gridSize <- 100
-squareGrid <- expand.grid(seq(0, 1, len = gridSize), seq(0, 1, len = gridSize))
-
-#### Actual simulation ####
-totalPoints <- rpois(1, lambdaStar)
-totalPositions <- c(runif(totalPoints), runif(totalPoints))
-
-#### Intensity ####
-
-
-grf(1, grid = pts, cov.model = "exponential",
-    cov.pars = c(sigma2, covpar[1]), kappa = 0, method = "cholesky")
+runMCMC <- fit_pompp(
+  rep(0, 4), rep(0, 4), 10,
+  list(mean = rep(0, 4), Sigma = 10 * diag(4)),
+  list(mean = rep(0, 4), Sigma = 10 * diag(4)),
+  list(a = 0.001, b = 0.001),
+  cbind(simulated$Xint, simulated$Xobs, grid),
+  1, list(mean = 0, variance = 100),
+  list(a = 0.001, b = 0.001),
+  list(a = 0.001, b = 0.001),
+  cbind(simulated$Z_X, simulated$W_X),
+  simulated$observedMarks, simulated$X,
+  1:3, 4:5, 1:3, 4:5,
+  20, 7, 8,
+  10, 1, 100
+)
