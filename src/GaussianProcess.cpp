@@ -234,20 +234,19 @@ void NNGP::resampleGP(double marksMu, double marksVariance,
                       const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
                       Eigen::VectorXd betasPart, Eigen::VectorXd pgs) {
   int n = marksExpected.size();
-
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
   for (int i = 0; i < xSize; i++) {
-    marksExpected(i) = 1 / R::rgamma(marksShape - 1, 1 / (xMarks(i) * marksShape));
+    marksExpected(i) = 1 / R::rgamma(marksShape, 1 / (xMarks(i) * marksShape));
   }
 
-  Eigen::VectorXd temp = Eigen::MatrixXd::Constant(n, 1, 1 / marksVariance);
-  Eigen::SparseMatrix<double> newPrec = precision + pgs + temp;
-  sqrtC.compute(newPrec);
-  values = sqrtC.matrixU().solve(
-      Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(n, 0, 1))
-  ) + betasPart + ((marksExpected.array().log() - marksMu) / marksVariance).matrix();
+  precision.diagonal().array() += pgs.array() + 1 / marksVariance;
+  sqrtC.compute(precision);
+  Eigen::VectorXd temp = sqrtC.matrixU().solve(
+    Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(n, 0, 1))
+  );
+  augmentedValues = temp + betasPart + ((marksExpected.array().log() - marksMu) / marksVariance).matrix();
 }
 
 void NNGP::bootUpIminusA() {

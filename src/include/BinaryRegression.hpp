@@ -18,7 +18,7 @@ public:
   // Link function. Returns in the **LOG** scale. complementaryProb = true
   // calculates the link for 1 - p
   // For the stored beta vector
-  Eigen::VectorXd link(const Eigen::MatrixXd covariates,
+  Eigen::VectorXd link(const Eigen::MatrixXd& covariates,
                        bool complementaryProb = false) {
     return link(covariates, betas, complementaryProb);
   }

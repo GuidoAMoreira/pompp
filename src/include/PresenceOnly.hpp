@@ -51,6 +51,7 @@ public:
                const Eigen::VectorXd& observedValues,
                BinaryRegression* b, BinaryRegression* d,
                double lambda, double lambdaA, double lambdaB,
+               double mu, double nugget, double shape,
                double a, double mmm, double mms2,
                double mna, double mnb,
                double mpa, double mpb) : MarkovChain(), beta(b), delta(d),
@@ -60,7 +61,8 @@ public:
                lambdaStar(lambda), aL(lambdaA), bL(lambdaB),
                marks(observedValues), marksMuPriormu(mmm), marksMuPriors2(mms2),
                marksNuggetPriora(mna), marksNuggetPriorb(mnb),
-               marksShapePriora(mpa), marksShapePriorb(mpb) {
+               marksShapePriora(mpa), marksShapePriorb(mpb),
+               marksMu(mu), marksNugget(nugget), marksShape(shape) {
     xObservability = Eigen::MatrixXd(xObservabilityCovs.rows(), xObservabilityCovs.cols() + 1);
     xObservability.leftCols(xObservabilityCovs.cols()) = xObservabilityCovs;
     xObservability.col(xObservabilityCovs.cols()) =

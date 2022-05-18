@@ -36,7 +36,6 @@ double PresenceOnly::sampleProcesses() {
     return 0.;
   }
 
-
   // Sampling from X' and U
   marksExpected.conservativeResize(totalPoints);
   totalPoints -= x.rows(); // Number of points associated to them

@@ -39,18 +39,20 @@ public:
                             double& mark, double& markExpected,
                             double shape, double nugget, double mu, int type) {
     if (type == INTENSITY_VARIABLES) {
-      Eigen::VectorXd out(intensityCols.size() + useGPint);
+      Eigen::VectorXd out(intensityCols.size() + (useGPint ? 1 : 0));
       out.head(intensityCols.size()) = getVariablesVec(coordinates, intensityCols);
       if (useGPint)
-        out(intensityCols.size()) = spatialProcessInt->getNewPoint(coordinates,
+        out(intensityCols.size()) =
+          spatialProcessInt->getNewPoint(coordinates.head(2),
             mark, markExpected, shape, nugget, mu);
       return out;
     }
     if (type == OBSERVABILITY_VARIABLES) {
-      Eigen::VectorXd out(observabilityCols.size() + useGPobs);
+      Eigen::VectorXd out(observabilityCols.size() + (useGPobs ? 1 : 0));
       out.head(observabilityCols.size()) = getVariablesVec(coordinates, observabilityCols);
       if (useGPobs)
-        out(observabilityCols.size()) = spatialProcessObs->getNewPoint(coordinates,
+        out(observabilityCols.size()) =
+          spatialProcessObs->getNewPoint(coordinates.head(2),
             mark, markExpected, shape, nugget, mu);
       return out;
     }

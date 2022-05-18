@@ -22,8 +22,10 @@ public:
   void setCovFunction(CovarianceFunction* c) {covFun = c;}
 
   GaussianProcess(int s) : xSize(s) {}
-  GaussianProcess(Eigen::MatrixXd pos, int s) : xSize(s), tempSize(0),
-  positions(pos), values(Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(xSize, 0, 1))) {}
+  GaussianProcess(Eigen::MatrixXd pos, int s,
+                  CovarianceFunction* cf) : xSize(s), tempSize(0),
+  positions(pos), values(Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(xSize, 0, 1))),
+  covFun(cf) {}
   virtual ~GaussianProcess() {}
 
   double getNewPoint(Eigen::VectorXd coords, double& mark, double& markExpected,
@@ -76,8 +78,8 @@ class NNGP : public GaussianProcess {
   double propD;
 
 public:
-  NNGP(Eigen::MatrixXd pos, int s, int M) : GaussianProcess(pos, s),
-    neighborhoodSize(M) {}
+  NNGP(Eigen::MatrixXd pos, int s, int M, CovarianceFunction* cf) :
+  GaussianProcess(pos, s, cf), neighborhoodSize(M) {}
 
   void acceptNewPoint();
   // Methods to update which points are data augmentation.

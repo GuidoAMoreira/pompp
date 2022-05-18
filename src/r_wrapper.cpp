@@ -2,6 +2,7 @@
 #include "include/PresenceOnly.hpp"
 #include "include/BackgroundVariables.hpp"
 #include "include/GaussianProcess.hpp"
+#include "include/CovarianceFunction.hpp"
 #include "include/BinaryRegression.hpp"
 #include "include/RegressionPrior.hpp"
 #include <progress.hpp>
@@ -15,6 +16,7 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
                    double lambdaA, double lambdaB,
                    Rcpp::String covsClass, SEXP covariates,
                    double areaD, Rcpp::String xClass,
+                   double mu, double nugget, double shape,
                    double marksMuMu, double marksMuS2,
                    double marksNuggetA, double marksNuggetB,
                    double marksShapeA, double marksShapeB,
@@ -24,6 +26,7 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
                    Eigen::VectorXi observabilityCovs,
                    Eigen::VectorXi xIntensityCovs,
                    Eigen::VectorXi xObservabilityCovs,
+                   double maxDist, double sigma2, double phi,
                    int neighborhoodSize,
                    int longCol, int latCol,
                    int burnin, int thin, int iter, int threads, bool verbose) {
@@ -67,11 +70,13 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
       std::vector<int>(&intensityCovs[0], intensityCovs.data() + intensityCovs.size()),
       std::vector<int>(&observabilityCovs[0], observabilityCovs.data() + observabilityCovs.size()),
       covariates, longCol, latCol,
-      new NNGP(xPositions, xPositions.rows(), neighborhoodSize)
+      new NNGP(xPositions, xPositions.rows(), neighborhoodSize,
+               new PowerExponentialCovariance(maxDist, phi, 1, sigma2))
     ), xMarks,
     new LogisticRegression(beta, new NormalPrior(muB, SigmaB)),
     new LogisticRegression(delta, new NormalPrior(muD, SigmaD)),
     lambda, lambdaA, lambdaB,
+    mu, nugget, shape,
     areaD, marksMuMu, marksMuS2, marksNuggetA, marksNuggetB,
     marksShapeA, marksShapeB
   );
