@@ -110,8 +110,10 @@ public:
   }
 
   // Constructor and destructor
-  BackgroundVariables(std::vector<int> intCols, std::vector<int> obsCols) :
-    intensityCols(intCols), observabilityCols(obsCols) {}
+  BackgroundVariables(std::vector<int> intCols, std::vector<int> obsCols,
+                      GaussianProcess* gp) :
+    intensityCols(intCols), observabilityCols(obsCols),
+    spatialProcessObs(gp), useGPobs(true) {}
   virtual ~BackgroundVariables() {}
 
 protected:
@@ -126,8 +128,8 @@ class MatrixVariables : public BackgroundVariables {
   const long rows, cols, longCol, latCol;
 public:
   MatrixVariables(std::vector<int> intCols, std::vector<int> obsCols,
-                  SEXP matrix, int xC, int yC) :
-                  BackgroundVariables(intCols, obsCols),
+                  SEXP matrix, int xC, int yC, GaussianProcess* gp) :
+                  BackgroundVariables(intCols, obsCols, gp),
                   rows(INTEGER(Rf_getAttrib(matrix, R_DimSymbol))[0]),
                   cols(INTEGER(Rf_getAttrib(matrix, R_DimSymbol))[1]),
                   longCol(xC), latCol(yC) {

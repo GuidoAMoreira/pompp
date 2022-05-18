@@ -1,6 +1,7 @@
 #include <RcppEigen.h>
 #include "include/PresenceOnly.hpp"
 #include "include/BackgroundVariables.hpp"
+#include "include/GaussianProcess.hpp"
 #include "include/BinaryRegression.hpp"
 #include "include/RegressionPrior.hpp"
 #include <progress.hpp>
@@ -23,6 +24,7 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
                    Eigen::VectorXi observabilityCovs,
                    Eigen::VectorXi xIntensityCovs,
                    Eigen::VectorXi xObservabilityCovs,
+                   int neighborhoodSize,
                    int longCol, int latCol,
                    int burnin, int thin, int iter, int threads, bool verbose) {
   int i, j;
@@ -64,7 +66,8 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
     new MatrixVariables(
       std::vector<int>(&intensityCovs[0], intensityCovs.data() + intensityCovs.size()),
       std::vector<int>(&observabilityCovs[0], observabilityCovs.data() + observabilityCovs.size()),
-      covariates, longCol, latCol
+      covariates, longCol, latCol,
+      new NNGP(xPositions, xPositions.rows(), neighborhoodSize)
     ), xMarks,
     new LogisticRegression(beta, new NormalPrior(muB, SigmaB)),
     new LogisticRegression(delta, new NormalPrior(muD, SigmaD)),

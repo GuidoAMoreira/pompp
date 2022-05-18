@@ -11,7 +11,7 @@ class GaussianProcess {
                               double shape, double nugget, double mu);
 
   double updateCovarianceParameters();
-  virtual Eigen::MatrixXd recalcPrecision(std::vector<double> newParams); // Used in updateCovarianceParameter()
+  Eigen::MatrixXd recalcPrecision(std::vector<double> newParams); // Used in updateCovarianceParameter()
 public:
   // getters
   Eigen::VectorXd getAugmentedValues() {return augmentedValues;}
@@ -40,10 +40,11 @@ public:
   virtual void closeUp();
 protected:
   const int xSize; // Used in start up and close up
+  Eigen::VectorXd values;
   int tempAcc, tempSize; // Used in start up and close up
   int parameterSize, currentIndex;
   Eigen::MatrixXd positions, covariances, augmentedPositions, augmentedCovariances;
-  Eigen::VectorXd values, augmentedValues;
+  Eigen::VectorXd augmentedValues;
   CovarianceFunction* covFun;
   double logDensity;
 

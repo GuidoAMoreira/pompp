@@ -12,8 +12,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // cppPOMPP
-List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta, double lambda, Rcpp::String b_updater, Rcpp::String d_updater, Rcpp::String l_updater, Rcpp::List parB, Rcpp::List parD, double lambdaA, double lambdaB, Rcpp::String covsClass, SEXP covariates, double areaD, Rcpp::String xClass, double marksMuMu, double marksMuS2, double marksNuggetA, double marksNuggetB, double marksShapeA, double marksShapeB, Eigen::MatrixXd xValues, Eigen::VectorXd xMarks, Eigen::MatrixXd xPositions, Eigen::VectorXi intensityCovs, Eigen::VectorXi observabilityCovs, Eigen::VectorXi xIntensityCovs, Eigen::VectorXi xObservabilityCovs, int longCol, int latCol, int burnin, int thin, int iter, int threads, bool verbose);
-RcppExport SEXP _pompp_cppPOMPP(SEXP betaSEXP, SEXP deltaSEXP, SEXP lambdaSEXP, SEXP b_updaterSEXP, SEXP d_updaterSEXP, SEXP l_updaterSEXP, SEXP parBSEXP, SEXP parDSEXP, SEXP lambdaASEXP, SEXP lambdaBSEXP, SEXP covsClassSEXP, SEXP covariatesSEXP, SEXP areaDSEXP, SEXP xClassSEXP, SEXP marksMuMuSEXP, SEXP marksMuS2SEXP, SEXP marksNuggetASEXP, SEXP marksNuggetBSEXP, SEXP marksShapeASEXP, SEXP marksShapeBSEXP, SEXP xValuesSEXP, SEXP xMarksSEXP, SEXP xPositionsSEXP, SEXP intensityCovsSEXP, SEXP observabilityCovsSEXP, SEXP xIntensityCovsSEXP, SEXP xObservabilityCovsSEXP, SEXP longColSEXP, SEXP latColSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP iterSEXP, SEXP threadsSEXP, SEXP verboseSEXP) {
+List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta, double lambda, Rcpp::String b_updater, Rcpp::String d_updater, Rcpp::String l_updater, Rcpp::List parB, Rcpp::List parD, double lambdaA, double lambdaB, Rcpp::String covsClass, SEXP covariates, double areaD, Rcpp::String xClass, double marksMuMu, double marksMuS2, double marksNuggetA, double marksNuggetB, double marksShapeA, double marksShapeB, Eigen::MatrixXd xValues, Eigen::VectorXd xMarks, Eigen::MatrixXd xPositions, Eigen::VectorXi intensityCovs, Eigen::VectorXi observabilityCovs, Eigen::VectorXi xIntensityCovs, Eigen::VectorXi xObservabilityCovs, int neighborhoodSize, int longCol, int latCol, int burnin, int thin, int iter, int threads, bool verbose);
+RcppExport SEXP _pompp_cppPOMPP(SEXP betaSEXP, SEXP deltaSEXP, SEXP lambdaSEXP, SEXP b_updaterSEXP, SEXP d_updaterSEXP, SEXP l_updaterSEXP, SEXP parBSEXP, SEXP parDSEXP, SEXP lambdaASEXP, SEXP lambdaBSEXP, SEXP covsClassSEXP, SEXP covariatesSEXP, SEXP areaDSEXP, SEXP xClassSEXP, SEXP marksMuMuSEXP, SEXP marksMuS2SEXP, SEXP marksNuggetASEXP, SEXP marksNuggetBSEXP, SEXP marksShapeASEXP, SEXP marksShapeBSEXP, SEXP xValuesSEXP, SEXP xMarksSEXP, SEXP xPositionsSEXP, SEXP intensityCovsSEXP, SEXP observabilityCovsSEXP, SEXP xIntensityCovsSEXP, SEXP xObservabilityCovsSEXP, SEXP neighborhoodSizeSEXP, SEXP longColSEXP, SEXP latColSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP iterSEXP, SEXP threadsSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -44,6 +44,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Eigen::VectorXi >::type observabilityCovs(observabilityCovsSEXP);
     Rcpp::traits::input_parameter< Eigen::VectorXi >::type xIntensityCovs(xIntensityCovsSEXP);
     Rcpp::traits::input_parameter< Eigen::VectorXi >::type xObservabilityCovs(xObservabilityCovsSEXP);
+    Rcpp::traits::input_parameter< int >::type neighborhoodSize(neighborhoodSizeSEXP);
     Rcpp::traits::input_parameter< int >::type longCol(longColSEXP);
     Rcpp::traits::input_parameter< int >::type latCol(latColSEXP);
     Rcpp::traits::input_parameter< int >::type burnin(burninSEXP);
@@ -51,13 +52,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type iter(iterSEXP);
     Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(cppPOMPP(beta, delta, lambda, b_updater, d_updater, l_updater, parB, parD, lambdaA, lambdaB, covsClass, covariates, areaD, xClass, marksMuMu, marksMuS2, marksNuggetA, marksNuggetB, marksShapeA, marksShapeB, xValues, xMarks, xPositions, intensityCovs, observabilityCovs, xIntensityCovs, xObservabilityCovs, longCol, latCol, burnin, thin, iter, threads, verbose));
+    rcpp_result_gen = Rcpp::wrap(cppPOMPP(beta, delta, lambda, b_updater, d_updater, l_updater, parB, parD, lambdaA, lambdaB, covsClass, covariates, areaD, xClass, marksMuMu, marksMuS2, marksNuggetA, marksNuggetB, marksShapeA, marksShapeB, xValues, xMarks, xPositions, intensityCovs, observabilityCovs, xIntensityCovs, xObservabilityCovs, neighborhoodSize, longCol, latCol, burnin, thin, iter, threads, verbose));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_pompp_cppPOMPP", (DL_FUNC) &_pompp_cppPOMPP, 34},
+    {"_pompp_cppPOMPP", (DL_FUNC) &_pompp_cppPOMPP, 35},
     {NULL, NULL, 0}
 };
 
