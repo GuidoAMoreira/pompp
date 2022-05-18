@@ -4,26 +4,28 @@
 // Abstract class meant to be used for MCMC calculations
 
 #include <R.h>
-#include "MCMCprogress.hpp"
+//#include "MCMCprogress.hpp"
 
 class MarkovChain {
   double logPosterior;
   unsigned int iteration;
-  MCMCprogress* progressBar;
+//  MCMCprogress* progressBar;
 
   // States
   std::vector<long> discreteStates;
   std::vector<double> continuousStates;
 
 public:
-  MarkovChain() : iteration(0), progressBar(new MCMCprogress()) {}
+//  MarkovChain() : iteration(0), progressBar(new MCMCprogress()) {}
+  MarkovChain() : iteration(0) {}
+  virtual ~MarkovChain() {}
 
   // Update the chain
   void update() {
     GetRNGstate();
     logPosterior = applyTransitionKernel();
     PutRNGstate();
-    progressBar->increment(1);
+//    progressBar->increment(1);
     iteration++;
   }
   void update(unsigned int times) {

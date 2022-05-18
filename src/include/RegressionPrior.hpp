@@ -4,11 +4,12 @@
 #include <RcppEigen.h>
 
 class RegressionPrior {
-protected:
 public:
   virtual Eigen::VectorXd sample(const Eigen::VectorXd& mean,
                                  const Eigen::MatrixXd& precision) = 0;
   virtual double logPrior(const Eigen::VectorXd& betas) = 0;
+
+  virtual ~RegressionPrior() {}
 };
 
 class NormalPrior : public RegressionPrior {
@@ -23,7 +24,7 @@ public:
               const Eigen::VectorXd& Sigma) :
   priorMean(mu), priorCovariance(Sigma) {
     sigmaSolver.compute(Sigma);
-    priorPrecision = sigmaSolver.solve(Eigen::Matrix::Identity(mu.size(), mu.size()));
+    priorPrecision = sigmaSolver.solve(Eigen::MatrixXd::Identity(mu.size(), mu.size()));
     precisionTimesMean = sigmaSolver.solve(mu);
   }
 

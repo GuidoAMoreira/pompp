@@ -24,13 +24,15 @@ public:
   }
 
   // For any beta vector
-  virtual Eigen::VectorXd link(const Eigen::MatrixXd covariates,
-                               const Eigen::VectorXd beta,
+  virtual Eigen::VectorXd link(const Eigen::MatrixXd& covariates,
+                               const Eigen::VectorXd& beta,
                                bool complementaryProb = false) = 0;
 
-  // Constructor
-  BinaryRegression(Eigen::VectorXd initialize) : betas(initialize),
+  // Constructor and destructor
+  BinaryRegression(Eigen::VectorXd initialize,
+                   RegressionPrior* p) : betas(initialize), prior(p),
     n(initialize.size()) {}
+  virtual ~BinaryRegression() {}
 
   // Prior setter
   void setPrior(RegressionPrior* p) {prior = p;}
@@ -48,19 +50,17 @@ public:
 class LogisticRegression : public BinaryRegression {
   // Data augmentation
   std::vector<double> pg;
-
-  // Necessary getter
-  std::vector<double> getPolyaGamma() {return pg;}
 public:
-  Eigen::VectorXd getExtra() {return normalMean;}
+  Eigen::VectorXd getExtra() {return Eigen::VectorXd(Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(pg.data(), pg.size()));}
 
-  LogisticRegression(Eigen::VectorXd initialize) : BinaryRegression(initialize) {}
+  LogisticRegression(Eigen::VectorXd initialize, RegressionPrior* p) :
+    BinaryRegression(initialize, p) {}
 
   double sample(const Eigen::MatrixXd& onesCovariates,
                 const Eigen::MatrixXd& zerosCovariates);
   Eigen::VectorXd link(const Eigen::MatrixXd& covariates,
                        const Eigen::VectorXd& beta,
-                       bool complementaryProb);
+                       bool complementaryProb = false);
 };
 
 #endif

@@ -35,26 +35,30 @@ public:
     if (type == OBSERVABILITY_VARIABLES) return getVariablesMat(coordinates, observabilityCols);
     return Eigen::MatrixXd(0, 0);
   }
-  Eigen::VectorXd getVarVec(const Eigen::VectorXd& coordinates, int type) {
+  Eigen::VectorXd getVarVec(const Eigen::VectorXd& coordinates,
+                            double& mark, double& markExpected,
+                            double shape, double nugget, double mu, int type) {
     if (type == INTENSITY_VARIABLES) {
       Eigen::VectorXd out(intensityCols.size() + useGPint);
       out.head(intensityCols.size()) = getVariablesVec(coordinates, intensityCols);
-      if (useGPobs)
-        out(intensityCols.size()) = spatialProcessInt->getNewPoint(coordinates);
+      if (useGPint)
+        out(intensityCols.size()) = spatialProcessInt->getNewPoint(coordinates,
+            mark, markExpected, shape, nugget, mu);
       return out;
     }
     if (type == OBSERVABILITY_VARIABLES) {
       Eigen::VectorXd out(observabilityCols.size() + useGPobs);
       out.head(observabilityCols.size()) = getVariablesVec(coordinates, observabilityCols);
       if (useGPobs)
-        out(observabilityCols.size()) = spatialProcessObs->getNewPoint(coordinates);
+        out(observabilityCols.size()) = spatialProcessObs->getNewPoint(coordinates,
+            mark, markExpected, shape, nugget, mu);
       return out;
     }
     return Eigen::VectorXd(0);
   }
   Eigen::VectorXd getGP(int type) {
-    if (type == INTENSITY_VARIABLES) return spatialProcessInt->getValues();
-    if (type == OBSERVABILITY_VARIABLES) return spatialProcessObs->getValues();
+    if (type == INTENSITY_VARIABLES) return spatialProcessInt->getAugmentedValuesTail();
+    if (type == OBSERVABILITY_VARIABLES) return spatialProcessObs->getAugmentedValuesTail();
   }
   // Setters
   void setGP(GaussianProcess* gp, int type) {
@@ -70,13 +74,14 @@ public:
   }
 
   // Resampler
-  void resampleGPs(double marksMu, Eigen::VectorXd marksExpected,
-                   double marksVariance,
+  void resampleGPs(double marksMu, double marksVariance,
+                   double marksShape, Eigen::VectorXd& marksExpected,
+                   const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
                    Eigen::VectorXd betasPart, Eigen::VectorXd pgs) {
-    if (useGPint) spatialProcessInt->resampleGP(marksMu, marksExpected,
-        marksVariance, betasPart, pgs);
-    if (useGPobs) spatialProcessObs->resampleGP(marksMu, marksExpected,
-        marksVariance, betasPart, pgs);
+    if (useGPint) spatialProcessInt->resampleGP(marksMu, marksVariance,
+        marksShape, marksExpected, xMarks, xPrimeMarks, betasPart, pgs);
+    if (useGPobs) spatialProcessObs->resampleGP(marksMu, marksVariance,
+        marksShape, marksExpected, xMarks, xPrimeMarks, betasPart, pgs);
   }
 
   // Random point (for point process simulation)
@@ -104,9 +109,10 @@ public:
     if (useGPobs) spatialProcessObs->closeUp();
   }
 
-  // Constructor
+  // Constructor and destructor
   BackgroundVariables(std::vector<int> intCols, std::vector<int> obsCols) :
     intensityCols(intCols), observabilityCols(obsCols) {}
+  virtual ~BackgroundVariables() {}
 
 protected:
   std::vector<double*> data;
@@ -149,7 +155,7 @@ public:
 #pragma omp parallel for
 #endif
     for (int j = 0; j < columns.size(); j++)
-      out(j) = data[columns[j]][coordinates(2)];
+      out(j) = data[columns[j]][(int)coordinates(2)];
     return out;
   }
 };

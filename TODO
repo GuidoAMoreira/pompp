@@ -1,8 +1,3 @@
 **WARNING**
-Sampling of marksExpected and marksMu is probabilistically incorrect. Must be addressed
+Resampling processes, marks expected values and marks values is not well made.
 
--- PresenceOnly.cpp
-- Write a placeholder for metropolisExpected().
-
--- ?
-- Write an R wrapper

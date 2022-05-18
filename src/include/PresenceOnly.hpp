@@ -4,6 +4,7 @@
 #include "MarkovChain.hpp"
 #include "BinaryRegression.hpp"
 #include "BackgroundVariables.hpp"
+#include "RegressionPrior.hpp"
 
 #define MAX_ATTEMPTS_GP 1000
 
@@ -21,7 +22,8 @@ class PresenceOnly : public MarkovChain {
 
   // Data
   const Eigen::MatrixXd x;
-  const Eigen::MatrixXd xIntensity, xObservability;
+  const Eigen::MatrixXd xIntensity;
+  Eigen::MatrixXd xObservability;
   BackgroundVariables* bkg;
 
   // lambda star members
@@ -36,8 +38,7 @@ class PresenceOnly : public MarkovChain {
   marksShapePriora, marksShapePriorb;
   Eigen::VectorXd marksPrime, marksExpected;
   double marksMu, marksShape, marksNugget;
-  double updateMarks(const Eigen::VectorXd& gp);
-  double metropolisExpected(double mark, double gpv, double sd);
+  double updateMarksPars(const Eigen::VectorXd& gp);
 
   // Inherited
   double applyTransitionKernel();
@@ -48,14 +49,36 @@ public:
                const Eigen::MatrixXd& xObservabilityCovs,
                BackgroundVariables* bk,
                const Eigen::VectorXd& observedValues,
+               BinaryRegression* b, BinaryRegression* d,
+               double lambda, double lambdaA, double lambdaB,
                double a, double mmm, double mms2,
                double mna, double mnb,
-               double mpa, double mpb) : area(a), x(xPositions),
+               double mpa, double mpb) : MarkovChain(), beta(b), delta(d),
+               area(a), x(xPositions),
                xIntensity(xIntensityCovs),
-               xObservability(xObservabilityCovs), bkg(bk),
+               bkg(bk),
+               lambdaStar(lambda), aL(lambdaA), bL(lambdaB),
                marks(observedValues), marksMuPriormu(mmm), marksMuPriors2(mms2),
                marksNuggetPriora(mna), marksNuggetPriorb(mnb),
-               marksShapePriora(mpa), marksShapePriorb(mpb) {}
+               marksShapePriora(mpa), marksShapePriorb(mpb) {
+    xObservability = Eigen::MatrixXd(xObservabilityCovs.rows(), xObservabilityCovs.cols() + 1);
+    xObservability.leftCols(xObservabilityCovs.cols()) = xObservabilityCovs;
+    xObservability.col(xObservabilityCovs.cols()) =
+      Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(xObservabilityCovs.rows(), 0, 1));
+  }
+
+  // Getters
+  Eigen::VectorXd getBeta() {return beta->getBeta();}
+  Eigen::VectorXd getDelta() {return delta->getBeta();}
+  double getLambdaStar() {return lambdaStar;}
+  Eigen::MatrixXd getU() {return u;}
+  Eigen::MatrixXd getXprime() {return xprime;}
+  int getUsize() {return u.rows();}
+  int getXpsize() {return xprime.rows();}
+  Eigen::VectorXd getMarksPrime() {return marksPrime;}
+  double getMarksMu() {return marksMu;}
+  double getMarksShape() {return marksShape;}
+  double getMarksNugget() {return marksNugget;}
 };
 
 #endif

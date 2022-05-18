@@ -9,6 +9,7 @@ class CovarianceFunction {
   double logDensity;
 public:
   CovarianceFunction(double mD, double s2) : maxDist(mD), sigma2(s2) {}
+  virtual ~CovarianceFunction() {}
 
   // getters
   virtual double getPar(int index) = 0;
@@ -45,7 +46,7 @@ public:
   void setPar(double newValue, int index = 0) {phi = newValue;}
 
   double operator()(double dist, Eigen::VectorXd pars) {return sigma2 * exp(-pow(dist, alpha) / pars(0));}
-  double operator()(double dist) {Eigen::VectorXd p(1); p(0) = phi; return calcCov(dist, p);}
+  double operator()(double dist) {Eigen::VectorXd p(1); p(0) = phi; return (*this)(dist, p);}
   double calcRange(double maxCor, Eigen::VectorXd pars) {return pow(-pars(0) * log(maxCor), 1 / alpha);}
   double calcRange(double maxCor) {Eigen::VectorXd p(1); p(0) = phi; return calcRange(maxCor, p);}
 };

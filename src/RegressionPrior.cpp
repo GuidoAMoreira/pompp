@@ -6,10 +6,10 @@ Eigen::VectorXd NormalPrior::sample(const Eigen::VectorXd& mean,
   Eigen::LLT<Eigen::MatrixXd> decomp;
   decomp.compute(precision + priorPrecision);
 
-  return decomp.matrixU().triangularView<Eigen::Upper>.solve(
+  return decomp.matrixU().solve(
                         Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(mean.size(), 0, 1))
     ) +
-    decomp * (mean + precisionTimesMean);
+    decomp.matrixU().solve(mean + precisionTimesMean);
 }
 
 inline double NormalPrior::logPrior(const Eigen::VectorXd& betas) {

@@ -6,23 +6,33 @@
 
 class GaussianProcess {
   // coordinates parameters. Function returns the sampled value
-  virtual void sampleNewPoint(Eigen::VectorXd coords);
+  virtual void sampleNewPoint(Eigen::VectorXd coords,
+                              double& mark, double& markExpected,
+                              double shape, double nugget, double mu);
 
   double updateCovarianceParameters();
   virtual Eigen::MatrixXd recalcPrecision(std::vector<double> newParams); // Used in updateCovarianceParameter()
 public:
   // getters
-  Eigen::VectorXd getValues() {return values;}
+  Eigen::VectorXd getAugmentedValues() {return augmentedValues;}
+  Eigen::VectorXd getAugmentedValuesTail() {
+    return augmentedValues.tail(augmentedValues.size() - xSize);
+  }
   // setters
   void setCovFunction(CovarianceFunction* c) {covFun = c;}
 
   GaussianProcess(int s) : xSize(s) {}
-  GaussianProcess(Eigen::MatrixXd pos, int s) : xSize(s), tempSize(0), positions(pos) {}
+  GaussianProcess(Eigen::MatrixXd pos, int s) : xSize(s), tempSize(0),
+  positions(pos), values(Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(xSize, 0, 1))) {}
+  virtual ~GaussianProcess() {}
 
-  double getNewPoint(Eigen::VectorXd coords) {sampleNewPoint(coords); return propValue;}
+  double getNewPoint(Eigen::VectorXd coords, double& mark, double& markExpected,
+                     double shape, double nugget, double mu)
+    {sampleNewPoint(coords, mark, markExpected, shape, nugget, mu); return propValue;}
   virtual void acceptNewPoint();
-  virtual void resampleGP(double marksMu, Eigen::VectorXd marksExpected,
-                          double marksVariance,
+  virtual void resampleGP(double marksMu, double marksVariance,
+                          double marksShape, Eigen::VectorXd& marksExpected,
+                          const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
                           Eigen::VectorXd betasPart, Eigen::VectorXd pgs);
 
   // Methods to update which points are data augmentation.
@@ -45,7 +55,9 @@ protected:
 };
 
 class NNGP : public GaussianProcess {
-  void sampleNewPoint(Eigen::VectorXd coords);
+  void sampleNewPoint(Eigen::VectorXd coords,
+                      double& mark, double& markExpected,
+                      double shape, double nugget, double mu);
   Eigen::MatrixXd recalcPrecision(std::vector<double> newParams); // Used in updateCovarianceParameter()
   void bootUpIminusA();
 
@@ -57,7 +69,8 @@ class NNGP : public GaussianProcess {
   Eigen::SparseMatrix<double> IminusA, precision;
   std::vector<Eigen::Triplet<double> > trips;
   Eigen::SimplicialLLT<Eigen::SparseMatrix<double> > sqrtC;
-  Eigen::MatrixXd pastCovariancesPositions, pastCovariances, propPrecision;
+  Eigen::MatrixXi pastCovariancesPositions;
+  Eigen::MatrixXd pastCovariances, propPrecision;
   int thisPosition;
   double propD;
 
@@ -70,8 +83,9 @@ public:
   void startUp(int howMany);
   void closeUp();
 
-  void resampleGP(double marksMu, Eigen::VectorXd marksExpected,
-                  double marksVariance,
+  void resampleGP(double marksMu, double marksVariance,
+                  double marksShape, Eigen::VectorXd& marksExpected,
+                  const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
                   Eigen::VectorXd betasPart, Eigen::VectorXd pgs);
 };
 

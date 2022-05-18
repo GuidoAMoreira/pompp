@@ -11,7 +11,7 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
   unsigned long i, n1 = onesCovariates.rows(), n0 = zerosCovariates.rows();
   pg = std::vector<double>(n0 + n1);
   PolyaGamma PG(1);
-  setNormalMean(Eigen::Vector(n0 + n1));
+  setNormalMean(Eigen::VectorXd(n0 + n1));
   Eigen::MatrixXd V = Eigen::MatrixXd::Constant(n, n, 0),
     x1 = Eigen::MatrixXd(n1, n),
     x0 = Eigen::MatrixXd(n0, n);
@@ -70,6 +70,6 @@ inline Eigen::VectorXd LogisticRegression::link(const Eigen::MatrixXd& covariate
                                                 const Eigen::VectorXd& beta,
                                                 bool complementaryProb) {
   return -( ( (complementaryProb ? 1 : -1) * (beta(0) +
-    (covariates * beta.tail<n>()).array() ) ).exp().log1p());
+    (covariates * beta.tail(n)).array() ) ).exp().log1p());
 }
 

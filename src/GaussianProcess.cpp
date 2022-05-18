@@ -4,7 +4,9 @@
 
 // [[Rcpp::plugins(openmp)]]
 
-void GaussianProcess::sampleNewPoint(Eigen::VectorXd coords) {
+void GaussianProcess::sampleNewPoint(Eigen::VectorXd coords, double& mark,
+                                     double& markExpected,
+                                     double shape, double nugget, double mu) {
   Eigen::LLT<Eigen::MatrixXd> solver;
   Eigen::VectorXd temp;
   propCovariances = Eigen::VectorXd(augmentedPositions.rows());
@@ -68,18 +70,18 @@ void GaussianProcess::startUp(int howMany) {
   tempAcc = 0;
   augmentedPositions = positions;
   augmentedValues = values;
-  augmentedCovariances = covariances;
-  augmentedCovariances.reserve(howMany, howMany);
+  augmentedCovariances = Eigen::MatrixXd(howMany, howMany);
+  augmentedCovariances.block(0, 0, xSize, xSize) = covariances;
 }
 
 void GaussianProcess::closeUp() {
   int newSize = xSize + tempAcc;
   int bigSize = augmentedCovariances.rows();
-  positions.resize(newSize);
+  positions.resize(newSize, 2);
   positions.bottomRows(tempAcc) = augmentedPositions.bottomRows(tempAcc);
   values.resize(newSize);
   values.tail(tempAcc) = augmentedValues.tail(tempAcc);
-  covariances.resize(newSize, newSize);
+  covariances.conservativeResize(newSize, newSize);
   covariances.block(tempAcc, tempAcc, tempAcc, tempAcc) =
     augmentedCovariances.block(bigSize - tempAcc, bigSize - tempAcc, tempAcc, tempAcc);
   covariances.block(xSize, 0, tempAcc, xSize) =
@@ -97,25 +99,28 @@ double GaussianProcess::calcDist(Eigen::VectorXd p1, Eigen::VectorXd p2) {
   return sqrt(d);
 }
 
-void GaussianProcess::resampleGP(double marksMu, Eigen::VectorXd marksExpected,
-                                 double marksVariance,
+void GaussianProcess::resampleGP(double marksMu, double marksVariance,
+                                 double marksShape, Eigen::VectorXd& marksExpected,
+                                 const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
                                  Eigen::VectorXd betasPart, Eigen::VectorXd pgs) {
   int n = marksExpected.size();
   Eigen::VectorXd temp = Eigen::MatrixXd::Constant(n, 1, 1 / marksVariance);
   Eigen::MatrixXd newPrec = covariances.inverse() + pgs + temp;
 
-  values = newPrec.llt().matrixL().inverse().transpose() *
-    Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(n, 0, 1)) +
-    betasPart + (marksExpected.array().log() .- marksMu) / marksVariance;
+  values = newPrec.llt().matrixL().transpose().solve(
+    Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(n, 0, 1))
+  ) + betasPart +( (marksExpected.array().log() - marksMu) / marksVariance).matrix();
 }
 
 //// NNGP starts here ////
 
-void NNGP::sampleNewPoint(Eigen::VectorXd coords) {
+void NNGP::sampleNewPoint(Eigen::VectorXd coords, double& mark,
+                          double& markExpected,
+                          double shape, double nugget, double mu) {
   R_CheckUserInterrupt();
 
   propPosition = coords;
-  distances = Eigen::MatrixXd::Constant(augmentedPositions.rows(), 1, 0); // Filled in getNeighborhood function
+  distances = Eigen::VectorXd(tempAcc); // Filled in getNeighborhood function
   neighborhood = getNeighorhood(coords);
   propPrecision = Eigen::MatrixXd(neighborhoodSize, neighborhoodSize);
   theseCovariances = Eigen::VectorXd(neighborhoodSize);
@@ -125,7 +130,7 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords) {
 #endif
   for (int i = 0; i < neighborhoodSize; i++) {
     for (int j = 0; j < i; j++) {
-      double* finder = std::find(
+      int* finder = std::find(
         pastCovariancesPositions.row(neighborhood[i]).data(),
         pastCovariancesPositions.row(neighborhood[i]).data() +
           pastCovariancesPositions.cols(),
@@ -155,11 +160,21 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords) {
 #endif
   for (int i = 0; i < neighborhoodSize; i++)
     t += augmentedValues(neighborhood[i]) * Arow(i);
-  propValue = Rf_rnorm(t, sqrt(propD));
+
+  // Variable transformation
+  double x, logy, y, z, totalVariance = propD + nugget;
+  x = R::rgamma(shape, 1 / shape);
+  logy = R::rnorm(mu + t + 2 * (totalVariance), sqrt(totalVariance));
+  y = exp(logy);
+  z = R::rnorm(t * nugget / (totalVariance), sqrt(propD * nugget) / totalVariance);
+
+  markExpected = y;
+  mark = x * y;
+  propValue = z * totalVariance + propD * (logy - mu);
 }
 
 std::vector<int> NNGP::getNeighorhood(Eigen::VectorXd coords) {
-  std::vector<int> output(augmentedPositions.rows());
+  std::vector<int> output(tempAcc);
 
   std::iota(output.begin(), output.end(), 0);
   std::nth_element(output.begin(), output.begin() + neighborhoodSize - 1, output.end(),
@@ -175,31 +190,30 @@ std::vector<int> NNGP::getNeighorhood(Eigen::VectorXd coords) {
 }
 
 void NNGP::acceptNewPoint() {
-  int n = augmentedValues.size();
-  tempAcc++;
-  for (int i = 0; i < neighborhoodSize; i++)
+  int i;
+  augmentedValues(tempAcc) = propValue;
+  augmentedPositions.row(tempAcc) = propPosition.transpose();
+  Eigen::VectorXi acceptedPositions(neighborhoodSize);
+  for (i = 0; i < neighborhoodSize; i++) acceptedPositions(i) = neighborhood[i];
+  pastCovariancesPositions.row(tempAcc) = acceptedPositions.transpose();
+  pastCovariances.row(tempAcc) = theseCovariances.transpose();
+  D(tempAcc) = propD;
+  for (i = 0; i < neighborhoodSize; i++)
     trips.push_back(Eigen::Triplet<double>(tempAcc, neighborhood[i], -Arow(i)));
   trips.push_back(Eigen::Triplet<double>(tempAcc, tempAcc, 1.));
-  augmentedValues.push_back(propValue);
-  augmentedPositions.conservativeResize(augmentedPositions.rows() + 1, Eigen::NoChange_t);
-  augmentedPositions.row(n) = propPosition.transpose();
-  pastCovariancesPositions.conservativeResize(pastCovariancesPositions.rows() + 1, Eigen::NoChange_t);
-  pastCovariancesPositions.row(n) = Eigen::VectorXd(neighborhood.data(), neighborhoodSize).transpose();
-  pastCovariances.conservativeResize(pastCovariances.rows() + 1, Eigen::NoChange_t);
-  pastCovariances.row(n) = theseCovariances.transpose();
-  augmentedPositions.conservativeResize(augmentedPositions.rows() + 1, Eigen::NoChange_t);
-  augmentedPositions.row(n) = propPosition.transpose();
-  D.push_back(propD);
+  tempAcc++;
 }
 
 void NNGP::startUp(int howMany) {
   tempAcc = xSize;
-  augmentedPositions = positions;
-  augmentedPositions.reserve((xSize + howMany) * 2);
-  augmentedValues = values;
-  augmentedValues.reserve(xSize + howMany);
+  augmentedPositions.resize(xSize + howMany, 2);
+  augmentedPositions.topRows(xSize) = positions;
+  augmentedValues.resize(xSize + howMany);
+  augmentedValues.head(xSize) = values;
+  pastCovariancesPositions.resize(howMany, neighborhoodSize);
+  pastCovariances.resize(howMany, neighborhoodSize);
   trips = std::vector<Eigen::Triplet<double> >(xSize * xSize + neighborhoodSize * howMany);
-  D.reserve(xSize + howMany);
+  D.resize(xSize + howMany);
   bootUpIminusA();
 }
 
@@ -207,24 +221,33 @@ void NNGP::closeUp() {
   int newSize = xSize + tempAcc;
   IminusA.setFromTriplets(trips.begin(), trips.end());
   IminusA.makeCompressed();
+  D.conservativeResize(newSize);
   precision = IminusA * D.asDiagonal().inverse() * IminusA.transpose();
+  augmentedValues.conservativeResize(newSize);
 
   // Close up the extra spaces
   trips = std::vector<Eigen::Triplet<double> >(0);
-  D = Eigen::VectorXd(0);
-  augmentedValues.conservativeResize(tempAcc);
 }
 
-void NNGP::resampleGP(double marksMu, Eigen::VectorXd marksExpected,
-                      double marksVariance,
+void NNGP::resampleGP(double marksMu, double marksVariance,
+                      double marksShape, Eigen::VectorXd& marksExpected,
+                      const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
                       Eigen::VectorXd betasPart, Eigen::VectorXd pgs) {
   int n = marksExpected.size();
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+  for (int i = 0; i < xSize; i++) {
+    marksExpected(i) = 1 / R::rgamma(marksShape - 1, 1 / (xMarks(i) * marksShape));
+  }
+
   Eigen::VectorXd temp = Eigen::MatrixXd::Constant(n, 1, 1 / marksVariance);
   Eigen::SparseMatrix<double> newPrec = precision + pgs + temp;
   sqrtC.compute(newPrec);
-  values = sqrtC.matrixU().triangularView<Eigen::Upper>.solve(
+  values = sqrtC.matrixU().solve(
       Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(n, 0, 1))
-  ) + betasPart + (marksExpected.array().log() .- marksMu) / marksVariance;
+  ) + betasPart + ((marksExpected.array().log() - marksMu) / marksVariance).matrix();
 }
 
 void NNGP::bootUpIminusA() {
@@ -242,9 +265,9 @@ void NNGP::bootUpIminusA() {
     covariances(i, i) = covFun->getSigma2();
   }
 
-  Eigen::LDLT<Eigen::MatrixXd miniSolver;
+  Eigen::LDLT<Eigen::MatrixXd> miniSolver;
   miniSolver.compute(covariances);
-  Eigen::MatrixXd miniIminusA = miniSolver.matrixL().triangularView<Eigen::Lower>.inverse();
+  Eigen::MatrixXd miniIminusA = miniSolver.matrixL().solve(Eigen::MatrixXd::Identity(xSize, xSize));
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -252,6 +275,6 @@ void NNGP::bootUpIminusA() {
     for (int j = 0; j < i; j++)
       trips.push_back(Eigen::Triplet<double>(i, j, miniIminusA(i, j)));
     trips.push_back(Eigen::Triplet<double>(i, i, 1.));
-    D.push_back(miniSolver.vectorD()(i));
+    D(i) = miniSolver.vectorD()(i);
   }
 }
