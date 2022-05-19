@@ -8,8 +8,8 @@
 double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
                                   const Eigen::MatrixXd& zerosCovariates) {
   unsigned long i, n1 = onesCovariates.rows(), n0 = zerosCovariates.rows();
-  pg = std::vector<double>(n0 + n1);
-  setNormalMean(Eigen::VectorXd(n0 + n1));
+  pg.resize(n0 + n1);
+  setNormalMeanSize(n0 + n1);
   Eigen::MatrixXd V = Eigen::MatrixXd::Constant(n, n, 0),
     x1 = Eigen::MatrixXd(n1, n),
     x0 = Eigen::MatrixXd(n0, n);
@@ -23,13 +23,13 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
 
   // Calculating X' Omega X + B and X' kappa + B b
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel private(i, pg)
 #endif
   {
   Eigen::VectorXd priMed = Eigen::MatrixXd::Constant(n, 1, 0);
   Eigen::MatrixXd priV = Eigen::MatrixXd::Constant(n, n, 0);
 #ifdef _OPENMP
-#pragma omp for nowait
+#pragma omp for
 #endif
   for (i = 0; i < n1; i++) // From the data matrix X
   {
@@ -39,7 +39,7 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
     setNormalMeanIndex(0.5 - (xb1(i) - x1(i, n - 1) * betas(n)) * pg[i], i);
   }
 #ifdef _OPENMP
-#pragma omp for nowait
+#pragma omp for
 #endif
   for (i = 0; i < n0; i++) // From the data matrix X
   {
@@ -48,6 +48,7 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
     priMed -= x0.row(i) * 0.5;
     setNormalMeanIndex(-0.5 - (xb0(i) - x0(i, n - 1) * betas(n)) * pg[n1 + i], n1 + i);
   }
+  Rcpp::Rcout << "aaaa.\n";
 #ifdef _OPENMP
 #pragma omp critical
 #endif

@@ -26,7 +26,7 @@ public:
                   CovarianceFunction* cf) : xSize(s), tempSize(0),
   positions(pos), values(Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(xSize, 0, 1))),
   covFun(cf) {augmentedValues = values;}
-  virtual ~GaussianProcess() {}
+  virtual ~GaussianProcess() {delete covFun;}
 
   double getNewPoint(Eigen::VectorXd coords, double& mark, double& markExpected,
                      double shape, double nugget, double mu)

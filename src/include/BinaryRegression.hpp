@@ -31,9 +31,10 @@ public:
 
   // Constructor and destructor
   BinaryRegression(Eigen::VectorXd initialize,
-                   RegressionPrior* p) : betas(initialize), prior(p),
-    n(initialize.size()) {}
-  virtual ~BinaryRegression() {}
+                   RegressionPrior* p) : betas(initialize),
+                   normalMean(Eigen::VectorXd(0)), prior(p),
+                   n(initialize.size()) {}
+  virtual ~BinaryRegression() {delete prior;}
 
   // Prior setter
   void setPrior(RegressionPrior* p) {prior = p;}
@@ -45,6 +46,7 @@ public:
   virtual Eigen::VectorXd getExtra() = 0; // For data augmentation variables
   // Some setters
   void setNormalMean(Eigen::VectorXd newValue) {normalMean = newValue;}
+  void setNormalMeanSize(int s) {normalMean.resize(s);}
   void setNormalMeanIndex(double newValue, long index) {normalMean(index) = newValue;}
 };
 
@@ -56,7 +58,7 @@ public:
   Eigen::VectorXd getExtra() {return Eigen::VectorXd(Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(pg.data(), pg.size()));}
 
   LogisticRegression(Eigen::VectorXd initialize, RegressionPrior* p) :
-    BinaryRegression(initialize, p), PG(PolyaGamma(1)) {}
+    BinaryRegression(initialize, p), pg(std::vector<double>(0)), PG(PolyaGamma(1)) {}
 
   double sample(const Eigen::MatrixXd& onesCovariates,
                 const Eigen::MatrixXd& zerosCovariates);

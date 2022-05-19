@@ -67,6 +67,7 @@ public:
     xObservability.leftCols(xObservabilityCovs.cols()) = xObservabilityCovs;
     xxprimeIntensity = xIntensity;
   }
+  ~PresenceOnly() {delete beta; delete delta; delete bkg;}
 
   // Getters
   Eigen::VectorXd getBeta() {return beta->getBeta();}

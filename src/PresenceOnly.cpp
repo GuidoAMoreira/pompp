@@ -167,20 +167,24 @@ double PresenceOnly::updateMarksPars(const Eigen::VectorXd& gp) {
 inline double PresenceOnly::applyTransitionKernel() {
   double out, privateOut1, privateOut2;
   out = sampleProcesses() + updateLambdaStar();
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-{
-#ifdef _OPENMP
-#pragma omp sections nowait
-#pragma omp section
-#endif
+// #ifdef _OPENMP
+// #pragma omp parallel
+// #endif
+// {
+// #ifdef _OPENMP
+// #pragma omp sections nowait
+// #endif
+// {
+// #ifdef _OPENMP
+// #pragma omp section
+// #endif
   privateOut1 = beta->sample(xxprimeIntensity, uIntensity);
-#ifdef _OPENMP
-#pragma omp section
-#endif
+// #ifdef _OPENMP
+// #pragma omp section
+// #endif
   privateOut2 = delta->sample(xObservability, xprimeObservability);
-}
+// }
+// }
   out += updateMarksPars(bkg->getGPfull(OBSERVABILITY_VARIABLES));
   bkg->resampleGPs(marksMu, marksNugget, marksShape, marksExpected,
                  marks, marksPrime, delta->getNormalMean(), delta->getExtra());

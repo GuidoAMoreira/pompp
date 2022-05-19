@@ -22,5 +22,7 @@ runMCMC <- fit_pompp(
   1:3, 4:5, 1:3, 4:5,
   sqrt(2), sigma2, phi,
   20, 6, 7,
-  10, 1, 100
+  10000, 1, 20000
 )
+
+saveRDS(runMCMC, "tests/data/mcmcResult.rds")

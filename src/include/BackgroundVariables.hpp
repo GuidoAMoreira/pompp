@@ -120,7 +120,7 @@ public:
                       GaussianProcess* gp) :
     intensityCols(intCols), observabilityCols(obsCols),
     spatialProcessObs(gp), useGPobs(true) {}
-  virtual ~BackgroundVariables() {}
+  virtual ~BackgroundVariables() {delete spatialProcessObs;}
 
 protected:
   std::vector<double*> data;

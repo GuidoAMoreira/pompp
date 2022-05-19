@@ -14,10 +14,10 @@ void GaussianProcess::sampleNewPoint(Eigen::VectorXd coords, double& mark,
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-for (int i = 0; i < augmentedPositions.rows(); i++) {
-  propCovariances(i) = (*covFun)(calcDist(augmentedPositions.row(i).transpose(),
-                                       coords));
-}
+  for (int i = 0; i < augmentedPositions.rows(); i++) {
+    propCovariances(i) = (*covFun)(calcDist(augmentedPositions.row(i).transpose(),
+                          coords));
+  }
   solver.compute(augmentedCovariances);
   temp = solver.solve(propCovariances);
 
@@ -133,12 +133,12 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords, double& mark,
     for (int j = 0; j < i; j++) {
       for (finder = 0; finder < neighborhoodSize; finder++)
         if (pastCovariancesPositions(neighborhood[i], finder) == neighborhood[j]) break;
-      propPrecision(i, j) =
-        finder < neighborhoodSize ?
+        propPrecision(i, j) =
+          finder < neighborhoodSize ?
           pastCovariances(neighborhood[i], finder) :
-        (*covFun)(calcDist(augmentedPositions.row(neighborhood[i]).transpose(),
-                  augmentedPositions.row(neighborhood[j]).transpose()));
-      propPrecision(j, i) = propPrecision(i, j);
+          (*covFun)(calcDist(augmentedPositions.row(neighborhood[i]).transpose(),
+                    augmentedPositions.row(neighborhood[j]).transpose()));
+        propPrecision(j, i) = propPrecision(i, j);
     }
     propPrecision(i, i) = covFun->getSigma2();
     theseCovariances(i) = (*covFun)(distances(neighborhood[i]));
@@ -177,7 +177,7 @@ std::vector<int> NNGP::getNeighorhood(Eigen::VectorXd coords) {
                      if (!this->distances(i2))
                        this->distances(i2) = this->calcDist(coords, this->augmentedPositions.row(i2).transpose());
                      return this->distances(i1) < this->distances(i2);
-                     });
+                   });
 
   return std::vector<int>(output.begin(), output.begin() + neighborhoodSize);
 }
@@ -261,9 +261,6 @@ void NNGP::bootUpIminusA() {
   Eigen::LDLT<Eigen::MatrixXd> miniSolver;
   miniSolver.compute(covariances);
   Eigen::MatrixXd miniIminusA = miniSolver.matrixL().solve(Eigen::MatrixXd::Identity(xSize, xSize));
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
   for (i = 0; i < neighborhoodSize; i++) {
     for (j = 0; j < i; j++)
       trips.push_back(Eigen::Triplet<double>(i, j, miniIminusA(i, j)));
@@ -285,10 +282,6 @@ void NNGP::bootUpIminusA() {
     neighborhood = getNeighorhood(positions.row(k));
     propPrecision = Eigen::MatrixXd(neighborhoodSize, neighborhoodSize);
     theseCovariances = Eigen::VectorXd(neighborhoodSize);
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
     for (i = 0; i < neighborhoodSize; i++) {
       for (j = 0; j < i; j++) {
         propPrecision(i, j) =
