@@ -22,12 +22,14 @@ double PresenceOnly::sampleProcesses() {
    * so there is no loss.
    */
   bool stillSampling;
+  xObservability.col(xObservability.cols() - 1) =
+    bkg->getGPfull(OBSERVABILITY_VARIABLES).head(x.rows());
 
   long totalPoints = R::rpois(lambdaStar * area);
   if (totalPoints <= x.rows()) {
     xprime.resize(0, 2);
     u.resize(0, 2);
-    xxprimeIntensity.resize(x.rows(), beta->getSize() - 1);
+    xxprimeIntensity = xIntensity;
     xprimeObservability.resize(0, delta->getSize() - 1);
     uIntensity.resize(0, beta->getSize() - 1);
     bkg->startGPs(0);
@@ -42,7 +44,7 @@ double PresenceOnly::sampleProcesses() {
   double p, q, uniform;
   long accXp = 0, accU = 0, currentAttempt;
   Eigen::VectorXd candidate;
-  Eigen::MatrixXd storingCoords(totalPoints, 2); // Put X' on top and U on bottom
+  Eigen::MatrixXd storingCoords(totalPoints, 3); // Put X' on top and U on bottom
   marksPrime = Eigen::VectorXd(totalPoints);
   bkg->startGPs(totalPoints);
   for (int i = 0; i < totalPoints; i++) {
@@ -77,13 +79,14 @@ double PresenceOnly::sampleProcesses() {
     if (currentAttempt == MAX_ATTEMPTS_GP) Rf_warning("GP sampling reached max attempts.");
   }
   bkg->setGPinStone();
-  marksPrime.conservativeResize(accXp);
-  marksExpected.conservativeResize(x.rows() + accXp);
+  marksPrime = marksPrime.head(accXp);
+  marksExpected = marksExpected.head(x.rows() + accXp);
 
-  xprime.resize(accXp, 2);
-  u.resize(accU, 2);
+  xprime = storingCoords.topRows(accXp);
+  u = storingCoords.bottomRows(accU);
 
-  xxprimeIntensity.conservativeResize(x.rows() + accXp, beta->getSize() - 1);
+  xxprimeIntensity.resize(x.rows() + accXp, beta->getSize() - 1);
+  xxprimeIntensity.topRows(x.rows()) = xIntensity;
   xprimeObservability.resize(accXp, delta->getSize() - 1);
 
   if (accXp) {
@@ -105,7 +108,7 @@ double PresenceOnly::sampleProcesses() {
 double PresenceOnly::updateMarksPars(const Eigen::VectorXd& gp) {
   double sqrtMarksNugget = sqrt(marksNugget);
 
-  Eigen::VectorXd logExpected = marksExpected.array().log().matrix() - gp;
+  Eigen::VectorXd logExpected = marksExpected.array().log() - gp.array();
 
   // Sampling the nugget
   int counter = 0;
@@ -178,9 +181,9 @@ inline double PresenceOnly::applyTransitionKernel() {
 #endif
   privateOut2 = delta->sample(xObservability, xprimeObservability);
 }
-  out += updateMarksPars(bkg->getGP(OBSERVABILITY_VARIABLES));
+  out += updateMarksPars(bkg->getGPfull(OBSERVABILITY_VARIABLES));
   bkg->resampleGPs(marksMu, marksNugget, marksShape, marksExpected,
-                 marks, marksPrime, beta->getNormalMean(), beta->getExtra());
+                 marks, marksPrime, delta->getNormalMean(), delta->getExtra());
   return out + privateOut1 + privateOut2;
 }
 

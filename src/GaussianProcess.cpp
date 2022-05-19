@@ -120,29 +120,22 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords, double& mark,
   R_CheckUserInterrupt();
 
   propPosition = coords;
-  distances = Eigen::VectorXd(tempAcc); // Filled in getNeighborhood function
+  distances = Eigen::MatrixXd::Constant(tempAcc, 1, 0); // Filled in getNeighborhood function. Must be 0.
   neighborhood = getNeighorhood(coords);
   propPrecision = Eigen::MatrixXd(neighborhoodSize, neighborhoodSize);
   theseCovariances = Eigen::VectorXd(neighborhoodSize);
+  int finder;
 
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel for private(finder)
 #endif
   for (int i = 0; i < neighborhoodSize; i++) {
     for (int j = 0; j < i; j++) {
-      int* finder = std::find(
-        pastCovariancesPositions.row(neighborhood[i]).data(),
-        pastCovariancesPositions.row(neighborhood[i]).data() +
-          pastCovariancesPositions.cols(),
-        neighborhood[j]
-      );
+      for (finder = 0; finder < neighborhoodSize; finder++)
+        if (pastCovariancesPositions(neighborhood[i], finder) == neighborhood[j]) break;
       propPrecision(i, j) =
-        finder != pastCovariancesPositions.row(neighborhood[i]).data() +
-        pastCovariancesPositions.cols() ?
-          pastCovariances(neighborhood[i], std::distance(
-              pastCovariancesPositions.row(neighborhood[i]).data(),
-              finder
-          ) - 1) :
+        finder < neighborhoodSize ?
+          pastCovariances(neighborhood[i], finder) :
         (*covFun)(calcDist(augmentedPositions.row(neighborhood[i]).transpose(),
                   augmentedPositions.row(neighborhood[j]).transpose()));
       propPrecision(j, i) = propPrecision(i, j);
@@ -186,7 +179,7 @@ std::vector<int> NNGP::getNeighorhood(Eigen::VectorXd coords) {
                      return this->distances(i1) < this->distances(i2);
                      });
 
-  return std::vector<int>(output.begin(), output.begin() + neighborhoodSize - 1);
+  return std::vector<int>(output.begin(), output.begin() + neighborhoodSize);
 }
 
 void NNGP::acceptNewPoint() {
@@ -205,26 +198,25 @@ void NNGP::acceptNewPoint() {
 }
 
 void NNGP::startUp(int howMany) {
-  tempAcc = xSize;
+  tempAcc = neighborhoodSize;
   augmentedPositions.resize(xSize + howMany, 2);
   augmentedPositions.topRows(xSize) = positions;
   augmentedValues.resize(xSize + howMany);
   augmentedValues.head(xSize) = values;
-  pastCovariancesPositions.resize(howMany, neighborhoodSize);
-  pastCovariances.resize(howMany, neighborhoodSize);
+  pastCovariancesPositions.resize(xSize + howMany, neighborhoodSize);
+  pastCovariances.resize(xSize + howMany, neighborhoodSize);
   trips = std::vector<Eigen::Triplet<double> >(xSize * xSize + neighborhoodSize * howMany);
   D.resize(xSize + howMany);
   bootUpIminusA();
 }
 
 void NNGP::closeUp() {
-  int newSize = xSize + tempAcc;
+  IminusA = Eigen::SparseMatrix<double>(tempAcc, tempAcc);
   IminusA.setFromTriplets(trips.begin(), trips.end());
   IminusA.makeCompressed();
-  D.conservativeResize(newSize);
+  D.conservativeResize(tempAcc);
   precision = IminusA * D.asDiagonal().inverse() * IminusA.transpose();
-  augmentedValues.conservativeResize(newSize);
-
+  augmentedValues.conservativeResize(tempAcc);
   // Close up the extra spaces
   trips = std::vector<Eigen::Triplet<double> >(0);
 }
@@ -247,15 +239,17 @@ void NNGP::resampleGP(double marksMu, double marksVariance,
     Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(n, 0, 1))
   );
   augmentedValues = temp + betasPart + ((marksExpected.array().log() - marksMu) / marksVariance).matrix();
+  values = augmentedValues.head(xSize);
 }
 
 void NNGP::bootUpIminusA() {
+  int i, j, k;
   Eigen::VectorXd temp;
-  covariances = Eigen::MatrixXd(xSize, xSize);
+  covariances = Eigen::MatrixXd(neighborhoodSize, neighborhoodSize);
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-  for (int i = 0; i < xSize; i++) {
+  for (int i = 0; i < neighborhoodSize; i++) {
     for (int j = 0; j < i; j++) {
       covariances(i, j) = (*covFun)(calcDist(positions.row(i).transpose(),
                            positions.row(j).transpose()));
@@ -270,10 +264,52 @@ void NNGP::bootUpIminusA() {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-  for (int i = 0; i < xSize; i++) {
-    for (int j = 0; j < i; j++)
+  for (i = 0; i < neighborhoodSize; i++) {
+    for (j = 0; j < i; j++)
       trips.push_back(Eigen::Triplet<double>(i, j, miniIminusA(i, j)));
     trips.push_back(Eigen::Triplet<double>(i, i, 1.));
     D(i) = miniSolver.vectorD()(i);
+
+    for (j = 0; j < neighborhoodSize; j++) {
+      if (j < i) {
+        pastCovariancesPositions(i, j) = j;
+        pastCovariances(i, j) = covariances(i, j);
+      } else {
+        pastCovariancesPositions(i, j) = i;
+        pastCovariances(i, j) = covFun->getSigma2();
+      }
+    }
+  }
+  for (k = neighborhoodSize; k < xSize; k++) {
+    distances = Eigen::MatrixXd::Constant(k, 1, 0); // Filled in getNeighborhood function. Must be 0.
+    neighborhood = getNeighorhood(positions.row(k));
+    propPrecision = Eigen::MatrixXd(neighborhoodSize, neighborhoodSize);
+    theseCovariances = Eigen::VectorXd(neighborhoodSize);
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (i = 0; i < neighborhoodSize; i++) {
+      for (j = 0; j < i; j++) {
+        propPrecision(i, j) =
+          (*covFun)(calcDist(positions.row(neighborhood[i]).transpose(),
+                    positions.row(neighborhood[j]).transpose()));
+        propPrecision(j, i) = propPrecision(i, j);
+      }
+      propPrecision(i, i) = covFun->getSigma2();
+      theseCovariances(i) = (*covFun)(distances(neighborhood[i]));
+    }
+    Arow = propPrecision.llt().solve(theseCovariances);
+    D(k) = covFun->getSigma2() -
+      (theseCovariances.transpose() * Arow)(0);
+
+    Eigen::VectorXi acceptedPositions(neighborhoodSize);
+    for (i = 0; i < neighborhoodSize; i++) acceptedPositions(i) = neighborhood[i];
+    pastCovariancesPositions.row(k) = acceptedPositions.transpose();
+    pastCovariances.row(k) = theseCovariances.transpose();
+    for (i = 0; i < neighborhoodSize; i++)
+      trips.push_back(Eigen::Triplet<double>(k, neighborhood[i], -Arow(i)));
+    trips.push_back(Eigen::Triplet<double>(k, k, 1.));
+    tempAcc++;
   }
 }

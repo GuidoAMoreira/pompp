@@ -110,7 +110,7 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
     out_nU[i] = mc.getUsize();
     out_nXp[i] = mc.getXpsize();
     fullSize = xMarks.size() + mc.getXpsize();
-    outMarksPrimeMean[i] = mc.getMarksPrime().mean();
+    outMarksPrimeMean[i] = mc.getMarksPrime().size() ? mc.getMarksPrime().mean() : 0;
     xMarksPrimeSquaredNorm = mc.getMarksPrime().squaredNorm();
     outMarksPrimeVariance[i] = xMarksPrimeSquaredNorm / mc.getXpsize() -
       outMarksPrimeMean[i] * outMarksPrimeMean[i];

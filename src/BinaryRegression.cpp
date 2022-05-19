@@ -1,6 +1,5 @@
 #include "include/BinaryRegression.hpp"
 #include <RcppEigen.h>
-#include "include/PolyaGamma.h"
 #include <omp.h>
 
 // [[Rcpp::plugins(openmp)]]
@@ -10,7 +9,6 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
                                   const Eigen::MatrixXd& zerosCovariates) {
   unsigned long i, n1 = onesCovariates.rows(), n0 = zerosCovariates.rows();
   pg = std::vector<double>(n0 + n1);
-  PolyaGamma PG(1);
   setNormalMean(Eigen::VectorXd(n0 + n1));
   Eigen::MatrixXd V = Eigen::MatrixXd::Constant(n, n, 0),
     x1 = Eigen::MatrixXd(n1, n),

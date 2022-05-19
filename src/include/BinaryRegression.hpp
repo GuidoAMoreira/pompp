@@ -3,6 +3,7 @@
 
 #include <RcppEigen.h>
 #include "RegressionPrior.hpp"
+#include "PolyaGamma.h"
 
 class BinaryRegression {
 protected:
@@ -50,11 +51,12 @@ public:
 class LogisticRegression : public BinaryRegression {
   // Data augmentation
   std::vector<double> pg;
+  PolyaGamma PG;
 public:
   Eigen::VectorXd getExtra() {return Eigen::VectorXd(Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(pg.data(), pg.size()));}
 
   LogisticRegression(Eigen::VectorXd initialize, RegressionPrior* p) :
-    BinaryRegression(initialize, p) {}
+    BinaryRegression(initialize, p), PG(PolyaGamma(1)) {}
 
   double sample(const Eigen::MatrixXd& onesCovariates,
                 const Eigen::MatrixXd& zerosCovariates);

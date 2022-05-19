@@ -21,7 +21,7 @@ class NormalPrior : public RegressionPrior {
 
 public:
   NormalPrior(const Eigen::VectorXd& mu,
-              const Eigen::VectorXd& Sigma) :
+              const Eigen::MatrixXd& Sigma) :
   priorMean(mu), priorCovariance(Sigma) {
     sigmaSolver.compute(Sigma);
     priorPrecision = sigmaSolver.solve(Eigen::MatrixXd::Identity(mu.size(), mu.size()));

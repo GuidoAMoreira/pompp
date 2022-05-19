@@ -25,7 +25,7 @@ public:
   GaussianProcess(Eigen::MatrixXd pos, int s,
                   CovarianceFunction* cf) : xSize(s), tempSize(0),
   positions(pos), values(Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(xSize, 0, 1))),
-  covFun(cf) {}
+  covFun(cf) {augmentedValues = values;}
   virtual ~GaussianProcess() {}
 
   double getNewPoint(Eigen::VectorXd coords, double& mark, double& markExpected,

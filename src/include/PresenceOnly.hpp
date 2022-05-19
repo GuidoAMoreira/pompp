@@ -65,8 +65,7 @@ public:
                marksMu(mu), marksNugget(nugget), marksShape(shape) {
     xObservability = Eigen::MatrixXd(xObservabilityCovs.rows(), xObservabilityCovs.cols() + 1);
     xObservability.leftCols(xObservabilityCovs.cols()) = xObservabilityCovs;
-    xObservability.col(xObservabilityCovs.cols()) =
-      Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(xObservabilityCovs.rows(), 0, 1));
+    xxprimeIntensity = xIntensity;
   }
 
   // Getters
