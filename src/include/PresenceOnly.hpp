@@ -66,6 +66,8 @@ public:
     xObservability = Eigen::MatrixXd(xObservabilityCovs.rows(), xObservabilityCovs.cols() + 1);
     xObservability.leftCols(xObservabilityCovs.cols()) = xObservabilityCovs;
     xxprimeIntensity = xIntensity;
+    xprimeObservability = Eigen::MatrixXd(0, 0);
+    uIntensity = Eigen::MatrixXd(0, 0);
   }
   ~PresenceOnly() {delete beta; delete delta; delete bkg;}
 

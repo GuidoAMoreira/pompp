@@ -32,6 +32,10 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
                    int burnin, int thin, int iter, int threads, bool verbose) {
   int i, j;
 
+#ifdef _OPENMP
+  omp_set_num_threads( threads );
+#endif
+
   // Auxiliary
   Eigen::MatrixXd xInt(xValues.rows(), xIntensityCovs.size());
   for (i = 0; i < xValues.rows(); i++)

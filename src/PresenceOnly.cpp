@@ -21,14 +21,13 @@ double PresenceOnly::sampleProcesses() {
    * homogeneous process, which would defeat the purpose of the analysis anyway
    * so there is no loss.
    */
-  bool stillSampling;
   xObservability.col(xObservability.cols() - 1) =
     bkg->getGPfull(OBSERVABILITY_VARIABLES).head(x.rows());
 
   long totalPoints = R::rpois(lambdaStar * area);
   if (totalPoints <= x.rows()) {
-    xprime.resize(0, 2);
-    u.resize(0, 2);
+    xprime.resize(0, 3);
+    u.resize(0, 3);
     xxprimeIntensity = xIntensity;
     xprimeObservability.resize(0, delta->getSize() - 1);
     uIntensity.resize(0, beta->getSize() - 1);
@@ -39,7 +38,9 @@ double PresenceOnly::sampleProcesses() {
   }
 
   // Sampling from X' and U
-  marksExpected.conservativeResize(totalPoints);
+  bool stillSampling;
+  marksExpected.resize(totalPoints);
+  marksExpected.head(x.rows()) = marks;
   totalPoints -= x.rows(); // Number of points associated to them
   double p, q, uniform;
   long accXp = 0, accU = 0, currentAttempt;
@@ -47,6 +48,7 @@ double PresenceOnly::sampleProcesses() {
   Eigen::MatrixXd storingCoords(totalPoints, 3); // Put X' on top and U on bottom
   marksPrime = Eigen::VectorXd(totalPoints);
   bkg->startGPs(totalPoints);
+  // Rcpp::Rcout << "\nStarting processes sample.\n";
   for (int i = 0; i < totalPoints; i++) {
     currentAttempt = 0;
     stillSampling = true;
@@ -60,27 +62,34 @@ double PresenceOnly::sampleProcesses() {
                                     marksShape, marksNugget, marksMu,
                                     INTENSITY_VARIABLES))(0);
       if (uniform > q) { // Assign to U
+        // Rcpp::Rcout << "Accepting U.\n";
         storingCoords.row(totalPoints - ++accU) = candidate.transpose();
         bkg->acceptNewPoint(INTENSITY_VARIABLES);
         stillSampling = false;
+        // Rcpp::Rcout << "Accepted U.\n";
       } else {
+        // Rcpp::Rcout << "U not accepted.\n";
         p = delta->link(bkg->getVarVec(candidate,
                                        marksPrime(i),
                                        marksExpected(x.rows() + i),
                                        marksShape, marksNugget, marksMu,
                                        OBSERVABILITY_VARIABLES))(0);
         if (uniform > p + q) { // Assign to X'
+          // Rcpp::Rcout << "Accepting Xp.\n";
           storingCoords.row(accXp++) = candidate.transpose();
           bkg->acceptNewPoint(OBSERVABILITY_VARIABLES);
           stillSampling = false;
+          // Rcpp::Rcout << "Accepted Xp.\n";
         } // Else discard candidate and try again.
       }
+      // Rcpp::Rcout << "Xp not accepted.\n";
     }
     if (currentAttempt == MAX_ATTEMPTS_GP) Rf_warning("GP sampling reached max attempts.");
   }
   bkg->setGPinStone();
-  marksPrime = marksPrime.head(accXp);
-  marksExpected = marksExpected.head(x.rows() + accXp);
+
+  marksExpected.conservativeResize(x.rows() + accXp);
+  marksPrime.conservativeResize(accXp);
 
   xprime = storingCoords.topRows(accXp);
   u = storingCoords.bottomRows(accU);
@@ -167,24 +176,24 @@ double PresenceOnly::updateMarksPars(const Eigen::VectorXd& gp) {
 inline double PresenceOnly::applyTransitionKernel() {
   double out, privateOut1, privateOut2;
   out = sampleProcesses() + updateLambdaStar();
-// #ifdef _OPENMP
-// #pragma omp parallel
-// #endif
-// {
-// #ifdef _OPENMP
-// #pragma omp sections nowait
-// #endif
-// {
-// #ifdef _OPENMP
-// #pragma omp section
-// #endif
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+{
+#ifdef _OPENMP
+#pragma omp sections nowait
+#endif
+{
+#ifdef _OPENMP
+#pragma omp section
+#endif
   privateOut1 = beta->sample(xxprimeIntensity, uIntensity);
-// #ifdef _OPENMP
-// #pragma omp section
-// #endif
+#ifdef _OPENMP
+#pragma omp section
+#endif
   privateOut2 = delta->sample(xObservability, xprimeObservability);
-// }
-// }
+}
+}
   out += updateMarksPars(bkg->getGPfull(OBSERVABILITY_VARIABLES));
   bkg->resampleGPs(marksMu, marksNugget, marksShape, marksExpected,
                  marks, marksPrime, delta->getNormalMean(), delta->getExtra());
