@@ -9,6 +9,7 @@ double PresenceOnly::updateLambdaStar() {
   double a = aL + x.rows() + xprime.rows() + u.rows(),
     b = bL + area;
   lambdaStar = R::rgamma(a, 1 / b);
+  lambdaStar = 1000;
 
   return - lambdaStar * b + (a - 1) * log(lambdaStar);
 }
@@ -168,6 +169,8 @@ double PresenceOnly::updateMarksPars(const Eigen::VectorXd& gp) {
       return partialDens + propDens;
     }
   }
+  marksShape = 1.5;
+  marksNugget = 0.5;
   return partialDens + prevDens;
 }
 

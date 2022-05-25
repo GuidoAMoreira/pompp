@@ -49,7 +49,7 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
     pg[n1 + i] = draw_from_PolyaGamma(xb0(i));
     priV += pg[n1 + i] * x0.row(i).transpose() * x0.row(i);
     priMed -= x0.row(i) * 0.5;
-    newNormalMean(n1 + i) = 0.5 - (xb1(i) - x1(i, n - 1) * betas(n)) * pg[i];
+    newNormalMean(n1 + i) = -0.5 - (xb0(i) - x0(i, n - 1) * betas(n)) * pg[i];
   }
 #ifdef _OPENMP
 #pragma omp critical
@@ -61,10 +61,10 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
 }
   setNormalMean(newNormalMean);
 
-betas = prior->sample(med, V);
+  betas = prior->sample(med, V);
 
-return link(x1, betas, false).sum() + link(x0, betas, true).sum() +
-  prior->logPrior(betas);
+  return link(x1, betas, false).sum() + link(x0, betas, true).sum() +
+    prior->logPrior(betas);
 }
 
 // Logistic link in the log scale

@@ -83,7 +83,7 @@ public:
   void resampleGPs(double marksMu, double marksVariance,
                    double marksShape, Eigen::VectorXd& marksExpected,
                    const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
-                   Eigen::VectorXd betasPart, Eigen::VectorXd pgs) {
+                   const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs) {
     if (useGPint) spatialProcessInt->resampleGP(marksMu, marksVariance,
         marksShape, marksExpected, xMarks, xPrimeMarks, betasPart, pgs);
     if (useGPobs) spatialProcessObs->resampleGP(marksMu, marksVariance,
@@ -132,6 +132,7 @@ protected:
 
 class MatrixVariables : public BackgroundVariables {
   const long rows, cols, longCol, latCol;
+  double halfVertSmallestIncrement, halfHorSmallestIncrement;
 public:
   MatrixVariables(std::vector<int> intCols, std::vector<int> obsCols,
                   SEXP matrix, int xC, int yC, GaussianProcess* gp) :
@@ -143,14 +144,35 @@ public:
     for (int i = 0; i < cols; i++) {
       data[i] = &REAL(matrix)[i * rows];
     }
+
+    halfVertSmallestIncrement = 0;
+    halfHorSmallestIncrement = 0;
+    double temp;
+    bool testVert = true, testHor = true;
+    for (long i = 1; i < rows; i++) {
+      temp = fabs(data[latCol][0] - data[latCol][i]);
+      if ((testVert && halfVertSmallestIncrement < temp) ||
+          (!testVert && temp && halfVertSmallestIncrement > temp)) {
+        testVert = false;
+        halfVertSmallestIncrement = temp;
+      }
+      temp = fabs(data[longCol][0] - data[longCol][i]);
+      if ((testHor && halfHorSmallestIncrement < temp) ||
+          (!testHor && temp && halfHorSmallestIncrement > temp)) {
+        testHor = false;
+        halfHorSmallestIncrement = temp;
+      }
+    }
+    halfVertSmallestIncrement /= 2;
+    halfHorSmallestIncrement /= 2;
   }
 
   // First coordinate is the random row and second is irrelevant.
   Eigen::VectorXd getRandomPoint() {
     Eigen::VectorXd out(3);
     long selectedRow = long(R::runif(0, 1) * rows);
-    out(0) = data[longCol][selectedRow];
-    out(1) = data[latCol][selectedRow];
+    out(0) = data[longCol][selectedRow] + R::runif(-1, 1) * halfHorSmallestIncrement;
+    out(1) = data[latCol][selectedRow] + R::runif(-1, 1) * halfVertSmallestIncrement;
     out(2) = selectedRow;
     return out;
   }

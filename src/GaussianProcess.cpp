@@ -102,7 +102,7 @@ double GaussianProcess::calcDist(Eigen::VectorXd p1, Eigen::VectorXd p2) {
 void GaussianProcess::resampleGP(double marksMu, double marksVariance,
                                  double marksShape, Eigen::VectorXd& marksExpected,
                                  const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
-                                 Eigen::VectorXd betasPart, Eigen::VectorXd pgs) {
+                                 const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs) {
   int n = marksExpected.size();
   Eigen::VectorXd temp = Eigen::MatrixXd::Constant(n, 1, 1 / marksVariance);
   Eigen::MatrixXd newPrec = covariances.inverse() + pgs + temp;
@@ -134,11 +134,10 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords, double& mark,
       for (finder = 0; finder < neighborhoodSize; finder++)
         if (pastCovariancesPositions(neighborhood[i], finder) ==
             neighborhood[j]) break;
-        propPrecision(i, j) =
-          finder < neighborhoodSize ?
+        propPrecision(i, j) = finder < neighborhoodSize ?
           pastCovariances(neighborhood[i], finder) :
-          (*covFun)(calcDist(augmentedPositions.row(neighborhood[i]).transpose(),
-                    augmentedPositions.row(neighborhood[j]).transpose()));
+          propPrecision(i, j) = (*covFun)(calcDist(augmentedPositions.row(neighborhood[i]).transpose(),
+                                 augmentedPositions.row(neighborhood[j]).transpose()));
         propPrecision(j, i) = propPrecision(i, j);
     }
     propPrecision(i, i) = covFun->getSigma2();
@@ -157,10 +156,10 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords, double& mark,
   // Variable transformation
   double x, logy, y, z, totalVariance = propD + nugget;
   x = R::rgamma(shape, 1 / shape);
-  logy = R::rnorm(mu + iterationMean + 2 * (totalVariance), sqrt(totalVariance));
+  logy = R::rnorm(mu + iterationMean + 2 * totalVariance, sqrt(totalVariance));
   y = exp(logy);
-  z = R::rnorm(iterationMean * nugget / (totalVariance), sqrt(propD * nugget) /
-    totalVariance);
+  z = R::rnorm(iterationMean * nugget / totalVariance, sqrt(propD * nugget /
+    totalVariance));
 
   markExpected = y;
   mark = x * y;
@@ -174,9 +173,11 @@ std::vector<int> NNGP::getNeighorhood(Eigen::VectorXd coords) {
   std::nth_element(output.begin(), output.begin() + neighborhoodSize - 1, output.end(),
                    [this, &coords](int i1, int i2) {
                      if (!this->distances(i1))
-                       this->distances(i1) = this->calcDist(coords, this->augmentedPositions.row(i1).transpose());
+                       this->distances(i1) = this->calcDist(coords,
+                                       this->augmentedPositions.row(i1).transpose());
                      if (!this->distances(i2))
-                       this->distances(i2) = this->calcDist(coords, this->augmentedPositions.row(i2).transpose());
+                       this->distances(i2) = this->calcDist(coords,
+                                       this->augmentedPositions.row(i2).transpose());
                      return this->distances(i1) < this->distances(i2);
                    });
 
@@ -225,7 +226,7 @@ void NNGP::closeUp() {
 void NNGP::resampleGP(double marksMu, double marksVariance,
                       double marksShape, Eigen::VectorXd& marksExpected,
                       const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
-                      Eigen::VectorXd betasPart, Eigen::VectorXd pgs) {
+                      const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs) {
   int n = marksExpected.size();
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -239,18 +240,8 @@ void NNGP::resampleGP(double marksMu, double marksVariance,
   Eigen::VectorXd temp = sqrtC.matrixU().solve(
     Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(n, 0, 1))
   );
-  augmentedValues = temp + betasPart + ((marksExpected.array().log() - marksMu) / marksVariance).matrix();
+  augmentedValues = temp + betasPart + ((marksMu - marksExpected.array().log()) / marksVariance).matrix();
   values = augmentedValues.head(xSize);
-
-  Eigen::MatrixXd printer(marksExpected.size(), 6);
-  printer.col(0) = marksExpected;
-  printer.col(1) = augmentedValues;
-  printer.col(2) = temp;
-  printer.col(3) = betasPart;
-  printer.col(4) = ((marksExpected.array().log() - marksMu) / marksVariance).matrix();
-  printer.col(5) = ((marksExpected.array().log() - marksMu)).matrix();
-  Rcpp::Rcout << marksMu << std::endl;
-  Rcpp::Rcout << printer << std::endl << std::endl;
 }
 
 void NNGP::bootUpIminusA() {
