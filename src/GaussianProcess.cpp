@@ -107,7 +107,7 @@ void GaussianProcess::resampleGP(double marksMu, double marksVariance,
   Eigen::VectorXd temp = Eigen::MatrixXd::Constant(n, 1, 1 / marksVariance);
   Eigen::MatrixXd newPrec = covariances.inverse() + pgs + temp;
 
-  values = newPrec.llt().matrixL().transpose().solve(
+  augmentedValues = newPrec.llt().matrixL().transpose().solve(
     Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(n, 0, 1))
   ) + betasPart +( (marksExpected.array().log() - marksMu) / marksVariance).matrix();
 }
@@ -132,7 +132,8 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords, double& mark,
   for (int i = 0; i < neighborhoodSize; i++) {
     for (int j = 0; j < i; j++) {
       for (finder = 0; finder < neighborhoodSize; finder++)
-        if (pastCovariancesPositions(neighborhood[i], finder) == neighborhood[j]) break;
+        if (pastCovariancesPositions(neighborhood[i], finder) ==
+            neighborhood[j]) break;
         propPrecision(i, j) =
           finder < neighborhoodSize ?
           pastCovariances(neighborhood[i], finder) :
@@ -144,22 +145,22 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords, double& mark,
     theseCovariances(i) = (*covFun)(distances(neighborhood[i]));
   }
   Arow = propPrecision.llt().solve(theseCovariances);
-  propD = covFun->getSigma2() -
-    (theseCovariances.transpose() * Arow)(0);
+  propD = covFun->getSigma2() - (theseCovariances.transpose() * Arow)(0);
 
-  double t = 0;
+  double iterationMean = 0;
 #ifdef _OPENMP
-#pragma omp parallel for reduction(+:t)
+#pragma omp parallel for reduction(+:iterationMean)
 #endif
   for (int i = 0; i < neighborhoodSize; i++)
-    t += augmentedValues(neighborhood[i]) * Arow(i);
+    iterationMean += augmentedValues(neighborhood[i]) * Arow(i);
 
   // Variable transformation
   double x, logy, y, z, totalVariance = propD + nugget;
   x = R::rgamma(shape, 1 / shape);
-  logy = R::rnorm(mu + t + 2 * (totalVariance), sqrt(totalVariance));
+  logy = R::rnorm(mu + iterationMean + 2 * (totalVariance), sqrt(totalVariance));
   y = exp(logy);
-  z = R::rnorm(t * nugget / (totalVariance), sqrt(propD * nugget) / totalVariance);
+  z = R::rnorm(iterationMean * nugget / (totalVariance), sqrt(propD * nugget) /
+    totalVariance);
 
   markExpected = y;
   mark = x * y;
@@ -190,7 +191,7 @@ void NNGP::acceptNewPoint() {
   for (i = 0; i < neighborhoodSize; i++) acceptedPositions(i) = neighborhood[i];
   pastCovariancesPositions.row(tempAcc) = acceptedPositions.transpose();
   pastCovariances.row(tempAcc) = theseCovariances.transpose();
-  D(tempAcc) = propD;
+  D(tempAcc) = 1 / propD;
   for (i = 0; i < neighborhoodSize; i++)
     trips.push_back(Eigen::Triplet<double>(tempAcc, neighborhood[i], -Arow(i)));
   trips.push_back(Eigen::Triplet<double>(tempAcc, tempAcc, 1.));
@@ -215,7 +216,7 @@ void NNGP::closeUp() {
   IminusA.setFromTriplets(trips.begin(), trips.end());
   IminusA.makeCompressed();
   D.conservativeResize(tempAcc);
-  precision = IminusA * D.asDiagonal().inverse() * IminusA.transpose();
+  precision = IminusA * D.asDiagonal() * IminusA.transpose();
   augmentedValues.conservativeResize(tempAcc);
   // Close up the extra spaces
   trips = std::vector<Eigen::Triplet<double> >(0);
@@ -240,6 +241,16 @@ void NNGP::resampleGP(double marksMu, double marksVariance,
   );
   augmentedValues = temp + betasPart + ((marksExpected.array().log() - marksMu) / marksVariance).matrix();
   values = augmentedValues.head(xSize);
+
+  Eigen::MatrixXd printer(marksExpected.size(), 6);
+  printer.col(0) = marksExpected;
+  printer.col(1) = augmentedValues;
+  printer.col(2) = temp;
+  printer.col(3) = betasPart;
+  printer.col(4) = ((marksExpected.array().log() - marksMu) / marksVariance).matrix();
+  printer.col(5) = ((marksExpected.array().log() - marksMu)).matrix();
+  Rcpp::Rcout << marksMu << std::endl;
+  Rcpp::Rcout << printer << std::endl << std::endl;
 }
 
 void NNGP::bootUpIminusA() {
@@ -293,8 +304,7 @@ void NNGP::bootUpIminusA() {
       theseCovariances(i) = (*covFun)(distances(neighborhood[i]));
     }
     Arow = propPrecision.llt().solve(theseCovariances);
-    D(k) = covFun->getSigma2() -
-      (theseCovariances.transpose() * Arow)(0);
+    D(k) = 1 / (covFun->getSigma2() - (theseCovariances.transpose() * Arow)(0));
 
     Eigen::VectorXi acceptedPositions(neighborhoodSize);
     for (i = 0; i < neighborhoodSize; i++) acceptedPositions(i) = neighborhood[i];

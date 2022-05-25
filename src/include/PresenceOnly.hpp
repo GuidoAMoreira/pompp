@@ -68,6 +68,7 @@ public:
     xxprimeIntensity = xIntensity;
     xprimeObservability = Eigen::MatrixXd(0, 0);
     uIntensity = Eigen::MatrixXd(0, 0);
+    marksExpected = Eigen::MatrixXd::Constant(x.rows(), 1, 1);
   }
   ~PresenceOnly() {delete beta; delete delta; delete bkg;}
 

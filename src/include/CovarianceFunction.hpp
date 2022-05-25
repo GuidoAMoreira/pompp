@@ -45,8 +45,8 @@ public:
   // setters
   void setPar(double newValue, int index = 0) {phi = newValue;}
 
-  double operator()(double dist, Eigen::VectorXd pars) {return sigma2 * exp(-pow(dist, alpha) / pars(0));}
-  double operator()(double dist) {Eigen::VectorXd p(1); p(0) = phi; return (*this)(dist, p);}
+  double operator()(double dist, Eigen::VectorXd pars) {return dist ? sigma2 * exp(-pow(dist, alpha) / pars(0)) : sigma2;}
+  double operator()(double dist) {Eigen::VectorXd p(2); p(0) = phi; p(1) = alpha; return (*this)(dist, p);}
   double calcRange(double maxCor, Eigen::VectorXd pars) {return pow(-pars(0) * log(maxCor), 1 / alpha);}
   double calcRange(double maxCor) {Eigen::VectorXd p(1); p(0) = phi; return calcRange(maxCor, p);}
 };
