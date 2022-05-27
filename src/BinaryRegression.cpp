@@ -72,5 +72,5 @@ inline Eigen::VectorXd LogisticRegression::link(const Eigen::MatrixXd& covariate
                                                 const Eigen::VectorXd& beta,
                                                 bool complementaryProb) {
   return -( ( (complementaryProb ? 1 : -1) * (beta(0) +
-            (covariates * beta.tail(n)).array() ) ).exp().log1p());
+            (covariates * beta.tail(n - 1)).array() ) ).exp().log1p());
 }

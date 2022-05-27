@@ -217,7 +217,7 @@ void NNGP::closeUp() {
   IminusA.setFromTriplets(trips.begin(), trips.end());
   IminusA.makeCompressed();
   D.conservativeResize(tempAcc);
-  precision = IminusA * D.asDiagonal() * IminusA.transpose();
+  precision = IminusA.transpose() * D.asDiagonal() * IminusA;
   augmentedValues.conservativeResize(tempAcc);
   // Close up the extra spaces
   trips = std::vector<Eigen::Triplet<double> >(0);
@@ -234,13 +234,13 @@ void NNGP::resampleGP(double marksMu, double marksVariance,
   for (int i = 0; i < xSize; i++) {
     marksExpected(i) = 1 / R::rgamma(marksShape, 1 / (xMarks(i) * marksShape));
   }
-
   precision.diagonal().array() += pgs.array() + 1 / marksVariance;
+
   sqrtC.compute(precision);
   Eigen::VectorXd temp = sqrtC.matrixU().solve(
     Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(n, 0, 1))
   );
-  augmentedValues = temp + betasPart + ((marksMu - marksExpected.array().log()) / marksVariance).matrix();
+  augmentedValues = temp + betasPart + ((marksExpected.array().log() - marksMu) / marksVariance).matrix();
   values = augmentedValues.head(xSize);
 }
 
@@ -267,7 +267,7 @@ void NNGP::bootUpIminusA() {
     for (j = 0; j < i; j++)
       trips.push_back(Eigen::Triplet<double>(i, j, miniIminusA(i, j)));
     trips.push_back(Eigen::Triplet<double>(i, i, 1.));
-    D(i) = miniSolver.vectorD()(i);
+    D(i) = 1 / miniSolver.vectorD()(i);
 
     for (j = 0; j < neighborhoodSize; j++) {
       if (j < i) {

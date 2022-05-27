@@ -65,8 +65,8 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
   // Get prior parameters
   Eigen::VectorXd muB = parB["mean"];
   Eigen::MatrixXd SigmaB = parB["covariance"];
-  Eigen::VectorXd muD = parB["mean"];
-  Eigen::MatrixXd SigmaD = parB["covariance"];
+  Eigen::VectorXd muD = parD["mean"];
+  Eigen::MatrixXd SigmaD = parD["covariance"];
 
   PresenceOnly mc(
     xPositions, xInt, xObs,

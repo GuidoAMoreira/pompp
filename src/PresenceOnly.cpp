@@ -135,6 +135,7 @@ double PresenceOnly::updateMarksPars(const Eigen::VectorXd& gp) {
     marksNugget = propNugget;
     partialDens = propDens;
   }
+  marksNugget = 0.5;
 
   // Sampling the mean parameter
   double newVariance = 1 / (1 / marksMuPriors2 + marksExpected.size() / marksNugget);
@@ -166,18 +167,17 @@ double PresenceOnly::updateMarksPars(const Eigen::VectorXd& gp) {
       marksShapePriorb * propShape;
     if (log(R::runif(0, 1)) <= propDens - prevDens) {
       marksShape = propShape;
+      marksShape = 1.5;
       return partialDens + propDens;
     }
   }
   marksShape = 1.5;
-  marksNugget = 0.5;
   return partialDens + prevDens;
 }
 
 inline double PresenceOnly::applyTransitionKernel() {
   double out, privateOut1, privateOut2;
-  out = sampleProcesses();
-  out += updateLambdaStar();
+  out = sampleProcesses() + updateLambdaStar();
 #ifdef _OPENMP
 #pragma omp parallel
 #endif

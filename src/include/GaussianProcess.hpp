@@ -24,7 +24,7 @@ public:
   GaussianProcess(int s) : xSize(s) {}
   GaussianProcess(Eigen::MatrixXd pos, int s,
                   CovarianceFunction* cf) : xSize(s), tempSize(0),
-  positions(pos),
+  positions(pos.leftCols(2)),
   values(Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(xSize, 0, 1))),
   covFun(cf) {augmentedValues = values;}
   virtual ~GaussianProcess() {delete covFun;}
