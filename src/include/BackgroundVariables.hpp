@@ -3,7 +3,9 @@
 
 #include "GaussianProcess.hpp"
 #include <RcppEigen.h>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 // [[Rcpp::plugins(openmp)]]
 
@@ -20,9 +22,7 @@ class BackgroundVariables {
                                std::vector<int> columns) {
     int n = coordinates.rows();
     Eigen::MatrixXd out(n, columns.size());
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
     for (int i = 0; i < n; i++)
       out.row(i) = getVariablesVec(coordinates.row(i), columns);
 
@@ -181,9 +181,7 @@ public:
   Eigen::VectorXd getVariablesVec(const Eigen::VectorXd& coordinates,
                                std::vector<int> columns) {
     Eigen::VectorXd out(columns.size());
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
     for (int j = 0; j < columns.size(); j++)
       out(j) = data[columns[j]][(int)coordinates(2)];
     return out;

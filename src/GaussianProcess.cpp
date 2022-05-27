@@ -1,6 +1,8 @@
 #include "include/GaussianProcess.hpp"
 #include <RcppEigen.h>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 // [[Rcpp::plugins(openmp)]]
 
@@ -11,9 +13,7 @@ void GaussianProcess::sampleNewPoint(Eigen::VectorXd coords, double& mark,
   Eigen::VectorXd temp;
   propCovariances = Eigen::VectorXd(augmentedPositions.rows());
 
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
   for (int i = 0; i < augmentedPositions.rows(); i++) {
     propCovariances(i) = (*covFun)(calcDist(augmentedPositions.row(i).transpose(),
                           coords));
@@ -29,9 +29,7 @@ double GaussianProcess::updateCovarianceParameters() {
   int estimSize = covFun->getParSize();
   std::vector<double> props(estimSize);
 
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
   for (int i = 0; i < estimSize; i++) {
     int attempts = 0;
     do {
@@ -126,9 +124,7 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords, double& mark,
   theseCovariances = Eigen::VectorXd(neighborhoodSize);
   int finder;
 
-#ifdef _OPENMP
 #pragma omp parallel for private(finder)
-#endif
   for (int i = 0; i < neighborhoodSize; i++) {
     for (int j = 0; j < i; j++) {
       for (finder = 0; finder < neighborhoodSize; finder++)
@@ -147,9 +143,7 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords, double& mark,
   propD = covFun->getSigma2() - (theseCovariances.transpose() * Arow)(0);
 
   double iterationMean = 0;
-#ifdef _OPENMP
 #pragma omp parallel for reduction(+:iterationMean)
-#endif
   for (int i = 0; i < neighborhoodSize; i++)
     iterationMean += augmentedValues(neighborhood[i]) * Arow(i);
 
@@ -228,9 +222,7 @@ void NNGP::resampleGP(double marksMu, double marksVariance,
                       const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
                       const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs) {
   int n = marksExpected.size();
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
   for (int i = 0; i < xSize; i++) {
     marksExpected(i) = 1 / R::rgamma(marksShape, 1 / (xMarks(i) * marksShape));
   }
@@ -248,9 +240,7 @@ void NNGP::bootUpIminusA() {
   int i, j, k;
   Eigen::VectorXd temp;
   covariances = Eigen::MatrixXd(neighborhoodSize, neighborhoodSize);
-#ifdef _OPENMP
 #pragma omp parallel for
-#endif
   for (int i = 0; i < neighborhoodSize; i++) {
     for (int j = 0; j < i; j++) {
       covariances(i, j) = (*covFun)(calcDist(positions.row(i).transpose(),

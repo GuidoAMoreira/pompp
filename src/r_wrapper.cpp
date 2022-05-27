@@ -57,9 +57,9 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
   Eigen::VectorXd outLogPost(outSize);
   Eigen::VectorXd out_nU(outSize);
   Eigen::VectorXd out_nXp(outSize);
-  Eigen::VectorXd outMarksPrimeMean(outSize);
+  Eigen::VectorXd outMarksPrimeSum(outSize);
   Eigen::VectorXd outMarksPrimeVariance(outSize);
-  Eigen::VectorXd outAllMarksMean(outSize);
+  Eigen::VectorXd outAllMarksSum(outSize);
   Eigen::VectorXd outAllMarksVariance(outSize);
 
   // Get prior parameters
@@ -114,14 +114,13 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
     out_nU[i] = mc.getUsize();
     out_nXp[i] = mc.getXpsize();
     fullSize = xMarks.size() + mc.getXpsize();
-    outMarksPrimeMean[i] = mc.getMarksPrime().size() ? mc.getMarksPrime().mean() : 0;
+    outMarksPrimeSum[i] = mc.getMarksPrime().size() ? mc.getMarksPrime().sum() : 0;
     xMarksPrimeSquaredNorm = mc.getMarksPrime().squaredNorm();
     outMarksPrimeVariance[i] = xMarksPrimeSquaredNorm / mc.getXpsize() -
-      outMarksPrimeMean[i] * outMarksPrimeMean[i];
-    outAllMarksMean[i] = (outMarksPrimeMean[i] * mc.getXpsize() + xMarks.sum()) /
-      fullSize;
+      outMarksPrimeSum[i] * outMarksPrimeSum[i] / (out_nXp[i] * out_nXp[i]);
+    outAllMarksSum[i] = outMarksPrimeSum[i] + xMarks.sum();
     outAllMarksVariance[i] = (xMarksPrimeSquaredNorm + xMarksSquaredNorm) / fullSize -
-      outAllMarksMean[i] * outAllMarksMean[i];
+      outAllMarksSum[i] * outAllMarksSum[i] / (fullSize * fullSize);
     outLogPost[i] = mc.getLogPosterior();
     progr_Main.increment();
   }
@@ -137,9 +136,9 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
                             Rcpp::Named("nugget") = outNuggets,
                             Rcpp::Named("nU") = out_nU,
                             Rcpp::Named("nXp") = out_nXp,
-                            Rcpp::Named("marksPrimeMean") = outMarksPrimeMean,
+                            Rcpp::Named("marksPrimeSum") = outMarksPrimeSum,
                             Rcpp::Named("marksPrimeVariance") = outMarksPrimeVariance,
-                            Rcpp::Named("allMarksMean") = outAllMarksMean,
+                            Rcpp::Named("allMarksSum") = outAllMarksSum,
                             Rcpp::Named("allMarksVariance") = outAllMarksVariance,
                             Rcpp::Named("logPost") = outLogPost);
 }

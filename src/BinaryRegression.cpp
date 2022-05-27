@@ -3,7 +3,9 @@ extern "C" {
 #include "include/PolyaGammaSampler.h"
 }
 #include <RcppEigen.h>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 // [[Rcpp::plugins(openmp)]]
 
@@ -25,15 +27,11 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
   xb0 = x0 * betas;
 
   // Calculating X' Omega X + B and X' kappa + B b
-#ifdef _OPENMP
 #pragma omp parallel
-#endif
 {
   Eigen::VectorXd priMed = Eigen::MatrixXd::Constant(n, 1, 0);
   Eigen::MatrixXd priV = Eigen::MatrixXd::Constant(n, n, 0);
-#ifdef _OPENMP
 #pragma omp for nowait
-#endif
   for (int i = 0; i < n1; i++) // From the data matrix X
   {
     pg[i] = draw_from_PolyaGamma(xb1(i));
@@ -41,9 +39,7 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
     priMed += x1.row(i) * 0.5;
     newNormalMean(i) = 0.5 - (xb1(i) - x1(i, n - 1) * betas(n)) * pg[i];
   }
-#ifdef _OPENMP
 #pragma omp for nowait
-#endif
   for (int i = 0; i < n0; i++) // From the data matrix X
   {
     pg[n1 + i] = draw_from_PolyaGamma(xb0(i));
@@ -51,9 +47,7 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
     priMed -= x0.row(i) * 0.5;
     newNormalMean(n1 + i) = -0.5 - (xb0(i) - x0(i, n - 1) * betas(n)) * pg[i];
   }
-#ifdef _OPENMP
 #pragma omp critical
-#endif
 {
   V += priV;
   med += priMed;

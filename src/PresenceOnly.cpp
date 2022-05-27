@@ -1,7 +1,9 @@
 #include <RcppEigen.h>
 #include "include/PresenceOnly.hpp"
 #include "include/BackgroundVariables.hpp"
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 // [[Rcpp::plugins(openmp)]]
 
@@ -15,6 +17,10 @@ double PresenceOnly::updateLambdaStar() {
 }
 
 double PresenceOnly::sampleProcesses() {
+  // Setting after the resampling
+  xObservability.col(xObservability.cols() - 1) =
+    bkg->getGPfull(OBSERVABILITY_VARIABLES).head(x.rows());
+
   // Determining number of points in X' and U
   /*
    * Technically, the correct code would sample from a truncated Poisson.
@@ -22,9 +28,6 @@ double PresenceOnly::sampleProcesses() {
    * homogeneous process, which would defeat the purpose of the analysis anyway
    * so there is no loss.
    */
-  xObservability.col(xObservability.cols() - 1) =
-    bkg->getGPfull(OBSERVABILITY_VARIABLES).head(x.rows());
-
   long totalPoints = R::rpois(lambdaStar * area);
   if (totalPoints <= x.rows()) {
     xprime.resize(0, 3);
@@ -60,7 +63,7 @@ double PresenceOnly::sampleProcesses() {
                                     marksPrime(0),
                                     marksExpected(0),
                                     marksShape, marksNugget, marksMu,
-                                    INTENSITY_VARIABLES))(0);
+                                    INTENSITY_VARIABLES).transpose())(0);
       if (uniform > q) { // Assign to U
         storingCoords.row(totalPoints - ++accU) = candidate.transpose();
         bkg->acceptNewPoint(INTENSITY_VARIABLES);
@@ -70,7 +73,7 @@ double PresenceOnly::sampleProcesses() {
                                        marksPrime(accXp),
                                        marksExpected(x.rows() + accXp),
                                        marksShape, marksNugget, marksMu,
-                                       OBSERVABILITY_VARIABLES))(0);
+                                       OBSERVABILITY_VARIABLES).transpose())(0);
         if (uniform > p + q) { // Assign to X'
           storingCoords.row(accXp++) = candidate.transpose();
           bkg->acceptNewPoint(OBSERVABILITY_VARIABLES);
@@ -85,15 +88,16 @@ double PresenceOnly::sampleProcesses() {
   marksExpected.conservativeResize(x.rows() + accXp);
   marksPrime.conservativeResize(accXp);
 
-  xxprimeIntensity.conservativeResize(x.rows() + accXp, beta->getSize() - 1);
+  xxprimeIntensity.resize(x.rows() + accXp, beta->getSize() - 1);
+  xxprimeIntensity.topRows(x.rows()) = xIntensity;
 
   if (accXp) {
     xprime = storingCoords.topRows(accXp);
     xxprimeIntensity.bottomRows(accXp) =
-      bkg->getVarMat(storingCoords.topRows(accXp), INTENSITY_VARIABLES);
+      bkg->getVarMat(xprime, INTENSITY_VARIABLES);
     xprimeObservability.resize(accXp, delta->getSize() - 1);
     xprimeObservability.leftCols(delta->getSize() - 2) =
-      bkg->getVarMat(storingCoords.topRows(accXp), OBSERVABILITY_VARIABLES);
+      bkg->getVarMat(xprime, OBSERVABILITY_VARIABLES);
     xprimeObservability.col(delta->getSize() - 2) =
       bkg->getGP(OBSERVABILITY_VARIABLES);
   } else {
@@ -103,7 +107,7 @@ double PresenceOnly::sampleProcesses() {
 
   if (accU) {
     u = storingCoords.bottomRows(accU);
-    uIntensity = bkg->getVarMat(storingCoords.bottomRows(accU), INTENSITY_VARIABLES);
+    uIntensity = bkg->getVarMat(u, INTENSITY_VARIABLES);
   } else {
     u.resize(0, 3);
     uIntensity.resize(0, beta->getSize() - 1);
@@ -178,21 +182,13 @@ double PresenceOnly::updateMarksPars(const Eigen::VectorXd& gp) {
 inline double PresenceOnly::applyTransitionKernel() {
   double out, privateOut1, privateOut2;
   out = sampleProcesses() + updateLambdaStar();
-#ifdef _OPENMP
 #pragma omp parallel
-#endif
 {
-#ifdef _OPENMP
 #pragma omp sections nowait
-#endif
 {
-#ifdef _OPENMP
 #pragma omp section
-#endif
   privateOut1 = beta->sample(xxprimeIntensity, uIntensity);
-#ifdef _OPENMP
 #pragma omp section
-#endif
   privateOut2 = delta->sample(xObservability, xprimeObservability);
 }
 }

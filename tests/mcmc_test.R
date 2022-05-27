@@ -24,7 +24,7 @@ sigma2 <- 2
 #   20, 6, 7,
 #   10000, 1, 20000
 # )
-sink("output.txt")
+# sink("output.txt")
 runMCMC <- fit_pompp(
   rep(0, 4), rep(0, 4), 10,
   list(mean = rep(0, 4), covariance = 10 * diag(4)),
@@ -39,9 +39,9 @@ runMCMC <- fit_pompp(
   1:3, 4:5, 1:3, 4:5,
   sqrt(2), sigma2, phi,
   5, 6, 7,
-  0, 1, 200
+  0, 1, 1000
 )
-sink()
+# sink()
 
 saveRDS(runMCMC, "tests/data/mcmcResult.rds")
 # saveRDS(runMCMC, "~/Dropbox/Work/PosPreferential/pompp/tests/mcmcResult.rds")
