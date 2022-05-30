@@ -60,9 +60,6 @@ double PresenceOnly::sampleProcesses() {
       candidate = bkg->getRandomPoint();
       uniform = log(R::runif(0, 1));
       q = beta->link(bkg->getVarVec(candidate,
-                                    marksPrime(0),
-                                    marksExpected(0),
-                                    marksShape, marksNugget, marksMu,
                                     INTENSITY_VARIABLES).transpose())(0);
       if (uniform > q) { // Assign to U
         storingCoords.row(totalPoints - ++accU) = candidate.transpose();
@@ -98,7 +95,7 @@ double PresenceOnly::sampleProcesses() {
     xprimeObservability.resize(accXp, delta->getSize() - 1);
     xprimeObservability.leftCols(delta->getSize() - 2) =
       bkg->getVarMat(xprime, OBSERVABILITY_VARIABLES);
-    xprimeObservability.col(delta->getSize() - 2) =
+    xprimeObservability.rightCols(1) =
       bkg->getGP(OBSERVABILITY_VARIABLES);
   } else {
     xprime.resize(0, 3);

@@ -19,9 +19,9 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
     x1 = Eigen::MatrixXd(n1, n),
     x0 = Eigen::MatrixXd(n0, n);
   Eigen::VectorXd med = Eigen::MatrixXd::Constant(n, 1, 0), xb1(n1), xb0(n0);
-  x1.leftCols(1) = Eigen::MatrixXd::Constant(n1,1,1);
+  x1.leftCols(1) = Eigen::MatrixXd::Constant(n1, 1, 1);
   x1.rightCols(n - 1) = onesCovariates;
-  x0.leftCols(1) = Eigen::MatrixXd::Constant(n0,1,1);
+  x0.leftCols(1) = Eigen::MatrixXd::Constant(n0, 1, 1);
   x0.rightCols(n - 1) = zerosCovariates;
   xb1 = x1 * betas;
   xb0 = x0 * betas;
@@ -57,7 +57,8 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
 
   betas = prior->sample(med, V);
 
-  return link(x1, betas, false).sum() + link(x0, betas, true).sum() +
+  return link(onesCovariates, betas, false).sum() +
+    link(zerosCovariates, betas, true).sum() +
     prior->logPrior(betas);
 }
 
