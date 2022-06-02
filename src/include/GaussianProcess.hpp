@@ -36,7 +36,8 @@ public:
   virtual void resampleGP(double marksMu, double marksVariance,
                           double marksShape, Eigen::VectorXd& marksExpected,
                           const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
-                          const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs);
+                          const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs,
+                          double gamma);
 
   // Methods to update which points are data augmentation.
   virtual void startUp(int howMany);
@@ -90,7 +91,8 @@ public:
   void resampleGP(double marksMu, double marksVariance,
                   double marksShape, Eigen::VectorXd& marksExpected,
                   const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
-                  const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs);
+                  const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs,
+                  double gamma);
 };
 
 #endif

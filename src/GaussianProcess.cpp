@@ -100,7 +100,8 @@ double GaussianProcess::calcDist(Eigen::VectorXd p1, Eigen::VectorXd p2) {
 void GaussianProcess::resampleGP(double marksMu, double marksVariance,
                                  double marksShape, Eigen::VectorXd& marksExpected,
                                  const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
-                                 const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs) {
+                                 const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs,
+                                 double gamma) {
   int n = marksExpected.size();
   Eigen::VectorXd temp = Eigen::MatrixXd::Constant(n, 1, 1 / marksVariance);
   Eigen::MatrixXd newPrec = covariances.inverse() + pgs + temp;
@@ -220,7 +221,8 @@ void NNGP::closeUp() {
 void NNGP::resampleGP(double marksMu, double marksVariance,
                       double marksShape, Eigen::VectorXd& marksExpected,
                       const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
-                      const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs) {
+                      const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs,
+                      double gamma) {
   int n = marksExpected.size();
 #pragma omp parallel for
   for (int i = 0; i < xSize; i++) {
@@ -231,7 +233,7 @@ void NNGP::resampleGP(double marksMu, double marksVariance,
   sqrtC.compute(precision);
   Eigen::VectorXd temp = sqrtC.matrixU().solve(
     Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(n, 0, 1))
-  );
+  ).array() / gamma;
   augmentedValues = temp + betasPart + ((marksExpected.array().log() - marksMu) / marksVariance).matrix();
   values = augmentedValues.head(xSize);
 }

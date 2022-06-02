@@ -191,7 +191,8 @@ inline double PresenceOnly::applyTransitionKernel() {
 }
   out += updateMarksPars(bkg->getGPfull(OBSERVABILITY_VARIABLES));
   bkg->resampleGPs(marksMu, marksNugget, marksShape, marksExpected,
-                 marks, marksPrime, delta->getNormalMean(), delta->getExtra());
+                 marks, marksPrime, delta->getNormalMean(), delta->getExtra(),
+                 delta->getBeta()(delta->getSize() - 1));
   return out + privateOut1 + privateOut2;
 }
 

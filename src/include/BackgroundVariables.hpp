@@ -95,11 +95,12 @@ public:
   void resampleGPs(double marksMu, double marksVariance,
                    double marksShape, Eigen::VectorXd& marksExpected,
                    const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
-                   const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs) {
+                   const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs,
+                   double gamma) {
     if (useGPint) spatialProcessInt->resampleGP(marksMu, marksVariance,
-        marksShape, marksExpected, xMarks, xPrimeMarks, betasPart, pgs);
+        marksShape, marksExpected, xMarks, xPrimeMarks, betasPart, pgs, gamma);
     if (useGPobs) spatialProcessObs->resampleGP(marksMu, marksVariance,
-        marksShape, marksExpected, xMarks, xPrimeMarks, betasPart, pgs);
+        marksShape, marksExpected, xMarks, xPrimeMarks, betasPart, pgs, gamma);
   }
 
   // Random point (for point process simulation)
