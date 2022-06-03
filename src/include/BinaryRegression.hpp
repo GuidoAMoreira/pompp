@@ -45,6 +45,7 @@ public:
   virtual Eigen::VectorXd getExtra() = 0; // For data augmentation variables
   // Some setters
   void setNormalMean(Eigen::VectorXd newValue) {normalMean = newValue;}
+  void setBeta(Eigen::VectorXd newValue) {betas = newValue;}
 };
 
 class LogisticRegression : public BinaryRegression {
