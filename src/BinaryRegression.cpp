@@ -37,7 +37,7 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
     pg[i] = draw_from_PolyaGamma(xb1(i));
     priV += pg[i] * x1.row(i).transpose() * x1.row(i);
     priMed += x1.row(i) * 0.5;
-    newNormalMean(i) = (0.5 - (xb1(i) - x1(i, n - 1) * betas(n - 1)) * pg[i]) /
+    newNormalMean(i) = (0.5 - (xb1(i) - x1(i, n - 1) * betas(n - 1)) * pg[i]) *
       betas(n - 1);
   }
 #pragma omp for nowait
@@ -46,7 +46,7 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
     pg[n1 + i] = draw_from_PolyaGamma(xb0(i));
     priV += pg[n1 + i] * x0.row(i).transpose() * x0.row(i);
     priMed -= x0.row(i) * 0.5;
-    newNormalMean(n1 + i) = (-0.5 - (xb0(i) - x0(i, n - 1) * betas(n - 1)) * pg[i]) /
+    newNormalMean(n1 + i) = (-0.5 - (xb0(i) - x0(i, n - 1) * betas(n - 1)) * pg[i]) *
       betas(n - 1);
   }
 #pragma omp critical

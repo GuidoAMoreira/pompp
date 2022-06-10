@@ -228,12 +228,12 @@ void NNGP::resampleGP(double marksMu, double marksVariance,
   for (int i = 0; i < xSize; i++) {
     marksExpected(i) = 1 / R::rgamma(marksShape, 1 / (xMarks(i) * marksShape));
   }
-  precision.diagonal().array() += pgs.array() + 1 / marksVariance;
+  precision.diagonal().array() += pgs.array() * (gamma * gamma) + 1 / marksVariance;
 
   sqrtC.compute(precision);
   Eigen::VectorXd temp = sqrtC.matrixU().solve(
     Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(n, 0, 1))
-  ).array() / gamma;
+  ).array();
   augmentedValues = temp + betasPart + ((marksExpected.array().log() - marksMu) / marksVariance).matrix();
   values = augmentedValues.head(xSize);
 }
