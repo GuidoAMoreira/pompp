@@ -46,7 +46,7 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
     pg[n1 + i] = draw_from_PolyaGamma(xb0(i));
     priV += pg[n1 + i] * x0.row(i).transpose() * x0.row(i);
     priMed -= x0.row(i) * 0.5;
-    newNormalMean(n1 + i) = (-0.5 - (xb0(i) - x0(i, n - 1) * betas(n - 1)) * pg[i]) *
+    newNormalMean(n1 + i) = (-0.5 - (xb0(i) - x0(i, n - 1) * betas(n - 1)) * pg[n1 + i]) *
       betas(n - 1);
   }
 #pragma omp critical

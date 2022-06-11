@@ -121,8 +121,8 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords, double& mark,
   propPosition = coords;
   distances = Eigen::MatrixXd::Constant(tempAcc, 1, 0); // Filled in getNeighborhood function. Must be 0.
   neighborhood = getNeighorhood(coords);
-  propPrecision = Eigen::MatrixXd(neighborhoodSize, neighborhoodSize);
-  theseCovariances = Eigen::VectorXd(neighborhoodSize);
+  propPrecision = Eigen::MatrixXd(neighborhoodSize, neighborhoodSize); // Holds the temporary covariances for the neighbors
+  theseCovariances = Eigen::VectorXd(neighborhoodSize); // Holds the temporary covariances for the proposed point
   int finder;
 
 #pragma omp parallel for private(finder)
@@ -233,7 +233,7 @@ void NNGP::resampleGP(double marksMu, double marksVariance,
   sqrtC.compute(precision);
   Eigen::VectorXd temp = sqrtC.matrixU().solve(
     Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(n, 0, 1))
-  ).array();
+  );
   augmentedValues = temp + betasPart + ((marksExpected.array().log() - marksMu) / marksVariance).matrix();
   values = augmentedValues.head(xSize);
 }

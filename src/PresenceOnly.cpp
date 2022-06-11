@@ -11,7 +11,7 @@ double PresenceOnly::updateLambdaStar() {
   double a = aL + x.rows() + xprime.rows() + u.rows(),
     b = bL + area;
   lambdaStar = R::rgamma(a, 1 / b);
-  lambdaStar = 1000;
+//  lambdaStar = 1000;
 
   return - lambdaStar * b + (a - 1) * log(lambdaStar);
 }
@@ -181,7 +181,7 @@ inline double PresenceOnly::applyTransitionKernel() {
   out = sampleProcesses() + updateLambdaStar();
 #pragma omp parallel
 {
-#pragma omp sections nowait
+#pragma omp sections
 {
 #pragma omp section
   privateOut1 = beta->sample(xxprimeIntensity, uIntensity);
