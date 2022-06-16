@@ -3,12 +3,12 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+#include "include/safeR.hpp"
 
 // [[Rcpp::plugins(openmp)]]
 
 void GaussianProcess::sampleNewPoint(Eigen::VectorXd coords, double& mark,
-                                     double& markExpected,
-                                     double shape, double nugget, double mu) {
+                                     double nugget, double mu) {
   Eigen::LLT<Eigen::MatrixXd> solver;
   Eigen::VectorXd temp;
   propCovariances = Eigen::VectorXd(augmentedPositions.rows());
@@ -21,7 +21,7 @@ void GaussianProcess::sampleNewPoint(Eigen::VectorXd coords, double& mark,
   solver.compute(augmentedCovariances);
   temp = solver.solve(propCovariances);
 
-  propValue = R::rnorm(temp.transpose() * augmentedValues,
+  propValue = rnorm(temp.transpose() * augmentedValues,
                        covFun->getSigma2() - propCovariances.transpose() * temp);
 }
 
@@ -33,7 +33,7 @@ double GaussianProcess::updateCovarianceParameters() {
   for (int i = 0; i < estimSize; i++) {
     int attempts = 0;
     do {
-      props[i] = R::rnorm(covFun->getPar(i), 0.1);
+      props[i] = rnorm(covFun->getPar(i), 0.1);
     } while (props[i] <= 0 && ++attempts <= 100);
     if (attempts == 100) {
       Rf_warning("Covariance parameter attempts reached max attempts.");
@@ -43,7 +43,7 @@ double GaussianProcess::updateCovarianceParameters() {
 
   Eigen::MatrixXd propPrec = recalcPrecision(props);
   double newDensity = -0.5 * (values.transpose() * propPrec * values - log(propPrec.determinant()));
-  if (log(R::runif(0, 1)) <= newDensity - logDensity) {
+  if (log(runif()) <= newDensity - logDensity) {
     for (int i = 0; i < estimSize; i++) covFun->setPar(props[i], i);
     return newDensity;
   } else return logDensity;
@@ -98,24 +98,22 @@ double GaussianProcess::calcDist(Eigen::VectorXd p1, Eigen::VectorXd p2) {
 }
 
 void GaussianProcess::resampleGP(double marksMu, double marksVariance,
-                                 double marksShape, Eigen::VectorXd& marksExpected,
                                  const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
                                  const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs,
                                  double gamma) {
-  int n = marksExpected.size();
+  int n = xPrimeMarks.size();
   Eigen::VectorXd temp = Eigen::MatrixXd::Constant(n, 1, 1 / marksVariance);
   Eigen::MatrixXd newPrec = covariances.inverse() + pgs + temp;
 
   augmentedValues = newPrec.llt().matrixL().transpose().solve(
     Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(n, 0, 1))
-  ) + betasPart +( (marksExpected.array().log() - marksMu) / marksVariance).matrix();
+  ) + betasPart +( (xPrimeMarks.array().log() - marksMu) / marksVariance).matrix();
 }
 
 //// NNGP starts here ////
 
 void NNGP::sampleNewPoint(Eigen::VectorXd coords, double& mark,
-                          double& markExpected,
-                          double shape, double nugget, double mu) {
+                          double nugget, double mu) {
   R_CheckUserInterrupt();
 
   propPosition = coords;
@@ -149,16 +147,12 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords, double& mark,
     iterationMean += augmentedValues(neighborhood[i]) * Arow(i);
 
   // Variable transformation
-  double x, logy, y, z, totalVariance = propD + nugget;
-  x = R::rgamma(shape, 1 / shape);
-  logy = R::rnorm(mu + iterationMean + 2 * totalVariance, sqrt(totalVariance));
-  y = exp(logy);
-  z = R::rnorm(iterationMean * nugget / totalVariance, sqrt(propD * nugget /
-    totalVariance));
+  double x, y;
+  x = rnorm(mu, sqrt(nugget));
+  y = rnorm(iterationMean, sqrt(propD));
 
-  markExpected = y;
-  mark = x * y;
-  propValue = z * totalVariance + propD * (logy - mu);
+  mark = exp(x + y);
+  propValue = y;
 }
 
 std::vector<int> NNGP::getNeighorhood(Eigen::VectorXd coords) {
@@ -219,22 +213,22 @@ void NNGP::closeUp() {
 }
 
 void NNGP::resampleGP(double marksMu, double marksVariance,
-                      double marksShape, Eigen::VectorXd& marksExpected,
                       const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
                       const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs,
                       double gamma) {
-  int n = marksExpected.size();
-#pragma omp parallel for
-  for (int i = 0; i < xSize; i++) {
-    marksExpected(i) = 1 / R::rgamma(marksShape, 1 / (xMarks(i) * marksShape));
-  }
-  precision.diagonal().array() += pgs.array() * (gamma * gamma) + 1 / marksVariance;
+  // First resample latent marks then all processes conditional to it
+  int n = xPrimeMarks.size();
+  xPrimeMarks = (rnorm(n, 0, sqrt(marksVariance)).array() + marksMu +
+    augmentedValues.tail(n).array()).exp();
 
+  precision.diagonal().array() += pgs.array() * (gamma * gamma) + 1 / marksVariance;
   sqrtC.compute(precision);
-  Eigen::VectorXd temp = sqrtC.matrixU().solve(
-    Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(n, 0, 1))
-  );
-  augmentedValues = temp + betasPart + ((marksExpected.array().log() - marksMu) / marksVariance).matrix();
+  Eigen::VectorXd randomPart = sqrtC.matrixU().solve(rnorm(precision.rows()));
+
+  Eigen::VectorXd marksPart(xSize + n);
+  marksPart.head(xSize) = (xMarks.array().log() - marksMu) / marksVariance;
+  marksPart.tail(n) = (xPrimeMarks.array().log() - marksMu) / marksVariance;
+  augmentedValues = randomPart + sqrtC.solve(betasPart + marksPart);
   values = augmentedValues.head(xSize);
 }
 

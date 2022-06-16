@@ -3,12 +3,12 @@
 
 #include <RcppEigen.h>
 #include "CovarianceFunction.hpp"
+#include "safeR.hpp"
 
 class GaussianProcess {
   // coordinates parameters. Function returns the sampled value
   virtual void sampleNewPoint(Eigen::VectorXd coords,
-                              double& mark, double& markExpected,
-                              double shape, double nugget, double mu);
+                              double& mark, double nugget, double mu);
 
   double updateCovarianceParameters();
   Eigen::MatrixXd recalcPrecision(std::vector<double> newParams); // Used in updateCovarianceParameter()
@@ -25,16 +25,15 @@ public:
   GaussianProcess(Eigen::MatrixXd pos, int s,
                   CovarianceFunction* cf) : xSize(s), tempSize(0),
   positions(pos.leftCols(2)),
-  values(Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(xSize, 0, 1))),
+  values(rnorm(xSize)),
   covFun(cf) {augmentedValues = values;}
   virtual ~GaussianProcess() {delete covFun;}
 
-  double getNewPoint(Eigen::VectorXd coords, double& mark, double& markExpected,
-                     double shape, double nugget, double mu)
-    {sampleNewPoint(coords, mark, markExpected, shape, nugget, mu); return propValue;}
+  double getNewPoint(Eigen::VectorXd coords, double& mark,
+                     double nugget, double mu)
+    {sampleNewPoint(coords, mark, nugget, mu); return propValue;}
   virtual void acceptNewPoint();
   virtual void resampleGP(double marksMu, double marksVariance,
-                          double marksShape, Eigen::VectorXd& marksExpected,
                           const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
                           const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs,
                           double gamma);
@@ -61,8 +60,8 @@ protected:
 
 class NNGP : public GaussianProcess {
   void sampleNewPoint(Eigen::VectorXd coords,
-                      double& mark, double& markExpected,
-                      double shape, double nugget, double mu);
+                      double& mark,
+                      double nugget, double mu);
   Eigen::MatrixXd recalcPrecision(std::vector<double> newParams); // Used in updateCovarianceParameter()
   void bootUpIminusA();
 
@@ -89,7 +88,6 @@ public:
   void closeUp();
 
   void resampleGP(double marksMu, double marksVariance,
-                  double marksShape, Eigen::VectorXd& marksExpected,
                   const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
                   const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs,
                   double gamma);

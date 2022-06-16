@@ -34,10 +34,9 @@ class PresenceOnly : public MarkovChain {
   // Marks members
   const Eigen::VectorXd marks;
   const double marksMuPriormu, marksMuPriors2,
-  marksNuggetPriora, marksNuggetPriorb,
-  marksShapePriora, marksShapePriorb;
-  Eigen::VectorXd marksPrime, marksExpected;
-  double marksMu, marksShape, marksNugget;
+  marksNuggetPriora, marksNuggetPriorb;
+  Eigen::VectorXd marksPrime;
+  double marksMu, marksNugget;
   double updateMarksPars(const Eigen::VectorXd& gp);
 
   // Inherited
@@ -51,24 +50,21 @@ public:
                const Eigen::VectorXd& observedValues,
                BinaryRegression* b, BinaryRegression* d,
                double lambda, double lambdaA, double lambdaB,
-               double mu, double nugget, double shape,
+               double mu, double nugget,
                double a, double mmm, double mms2,
-               double mna, double mnb,
-               double mpa, double mpb) : MarkovChain(), beta(b), delta(d),
+               double mna, double mnb) : MarkovChain(), beta(b), delta(d),
                area(a), x(xPositions),
                xIntensity(xIntensityCovs),
                bkg(bk),
                lambdaStar(lambda), aL(lambdaA), bL(lambdaB),
                marks(observedValues), marksMuPriormu(mmm), marksMuPriors2(mms2),
                marksNuggetPriora(mna), marksNuggetPriorb(mnb),
-               marksShapePriora(mpa), marksShapePriorb(mpb),
-               marksMu(mu), marksNugget(nugget), marksShape(shape) {
+               marksMu(mu), marksNugget(nugget) {
     xObservability = Eigen::MatrixXd(xObservabilityCovs.rows(), xObservabilityCovs.cols() + 1);
     xObservability.leftCols(xObservabilityCovs.cols()) = xObservabilityCovs;
     xxprimeIntensity = xIntensity;
     xprimeObservability = Eigen::MatrixXd(0, 0);
     uIntensity = Eigen::MatrixXd(0, 0);
-    marksExpected = Eigen::MatrixXd::Constant(x.rows(), 1, 1);
     if (!delta->getBeta()(delta->getSize() - 1)) {
       Eigen::VectorXd tempDelta = delta->getBeta();
       tempDelta(tempDelta.size() - 1) = 0.01;
@@ -87,7 +83,6 @@ public:
   int getXpsize() {return xprime.rows();}
   Eigen::VectorXd getMarksPrime() {return marksPrime;}
   double getMarksMu() {return marksMu;}
-  double getMarksShape() {return marksShape;}
   double getMarksNugget() {return marksNugget;}
 };
 

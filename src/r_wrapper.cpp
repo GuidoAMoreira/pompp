@@ -16,10 +16,9 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
                    double lambdaA, double lambdaB,
                    Rcpp::String covsClass, SEXP covariates,
                    double areaD, Rcpp::String xClass,
-                   double mu, double nugget, double shape,
+                   double mu, double nugget,
                    double marksMuMu, double marksMuS2,
                    double marksNuggetA, double marksNuggetB,
-                   double marksShapeA, double marksShapeB,
                    Eigen::MatrixXd xValues, Eigen::VectorXd xMarks,
                    Eigen::MatrixXd xPositions,
                    Eigen::VectorXi intensityCovs,
@@ -51,7 +50,6 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
   Eigen::MatrixXd outBetas(outSize, beta.size());
   Eigen::MatrixXd outDeltas(outSize, delta.size());
   Eigen::VectorXd outLambdas(outSize);
-  Eigen::VectorXd outShapes(outSize);
   Eigen::VectorXd outMus(outSize);
   Eigen::VectorXd outNuggets(outSize);
   Eigen::VectorXd outLogPost(outSize);
@@ -80,9 +78,8 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
     new LogisticRegression(beta, new NormalPrior(muB, SigmaB)),
     new LogisticRegression(delta, new NormalPrior(muD, SigmaD)),
     lambda, lambdaA, lambdaB,
-    mu, nugget, shape,
-    areaD, marksMuMu, marksMuS2, marksNuggetA, marksNuggetB,
-    marksShapeA, marksShapeB
+    mu, nugget,
+    areaD, marksMuMu, marksMuS2, marksNuggetA, marksNuggetB
   );
 
   // Burning in
@@ -108,7 +105,6 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
     outBetas.row(i) = mc.getBeta();
     outDeltas.row(i) = mc.getDelta();
     outLambdas[i] = mc.getLambdaStar();
-    outShapes[i] = mc.getMarksShape();
     outMus[i] = mc.getMarksMu();
     outNuggets[i] = mc.getMarksNugget();
     out_nU[i] = mc.getUsize();
@@ -131,7 +127,6 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
   return Rcpp::List::create(Rcpp::Named("beta") = outBetas,
                             Rcpp::Named("delta") = outDeltas,
                             Rcpp::Named("lambda") = outLambdas,
-                            Rcpp::Named("shape") = outShapes,
                             Rcpp::Named("mu") = outMus,
                             Rcpp::Named("nugget") = outNuggets,
                             Rcpp::Named("nU") = out_nU,

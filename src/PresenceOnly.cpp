@@ -4,13 +4,14 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+#include "include/safeR.hpp"
 
 // [[Rcpp::plugins(openmp)]]
 
 double PresenceOnly::updateLambdaStar() {
   double a = aL + x.rows() + xprime.rows() + u.rows(),
     b = bL + area;
-  lambdaStar = R::rgamma(a, 1 / b);
+  lambdaStar = rgamma(a, 1 / b);
 //  lambdaStar = 1000;
 
   return - lambdaStar * b + (a - 1) * log(lambdaStar);
@@ -28,7 +29,7 @@ double PresenceOnly::sampleProcesses() {
    * homogeneous process, which would defeat the purpose of the analysis anyway
    * so there is no loss.
    */
-  long totalPoints = R::rpois(lambdaStar * area);
+  long totalPoints = rpois(lambdaStar * area);
   if (totalPoints <= x.rows()) {
     xprime.resize(0, 3);
     u.resize(0, 3);
@@ -38,13 +39,11 @@ double PresenceOnly::sampleProcesses() {
     bkg->startGPs(0);
     bkg->setGPinStone();
     marksPrime = Eigen::VectorXd(0);
-    marksExpected.conservativeResize(x.rows());
     return 0.;
   }
 
   // Sampling from X' and U
   bool stillSampling;
-  marksExpected.conservativeResize(totalPoints);
   totalPoints -= x.rows(); // Number of points associated to them
   double p, q, uniform;
   long accXp = 0, accU = 0, currentAttempt;
@@ -58,7 +57,7 @@ double PresenceOnly::sampleProcesses() {
     while (stillSampling && ++currentAttempt < MAX_ATTEMPTS_GP) {
       R_CheckUserInterrupt();
       candidate = bkg->getRandomPoint();
-      uniform = log(R::runif(0, 1));
+      uniform = log(runif(0, 1));
       q = beta->link(bkg->getVarVec(candidate,
                                     INTENSITY_VARIABLES).transpose())(0);
       if (uniform > q) { // Assign to U
@@ -68,8 +67,7 @@ double PresenceOnly::sampleProcesses() {
       } else {
         p = delta->link(bkg->getVarVec(candidate,
                                        marksPrime(accXp),
-                                       marksExpected(x.rows() + accXp),
-                                       marksShape, marksNugget, marksMu,
+                                       marksNugget, marksMu,
                                        OBSERVABILITY_VARIABLES).transpose())(0);
         if (uniform > p + q) { // Assign to X'
           storingCoords.row(accXp++) = candidate.transpose();
@@ -82,7 +80,6 @@ double PresenceOnly::sampleProcesses() {
   }
   bkg->setGPinStone();
 
-  marksExpected.conservativeResize(x.rows() + accXp);
   marksPrime.conservativeResize(accXp);
 
   xxprimeIntensity.resize(x.rows() + accXp, beta->getSize() - 1);
@@ -116,83 +113,45 @@ double PresenceOnly::sampleProcesses() {
 double PresenceOnly::updateMarksPars(const Eigen::VectorXd& gp) {
   double sqrtMarksNugget = sqrt(marksNugget);
 
-  Eigen::VectorXd logExpected = marksExpected.array().log() - gp.array();
+  Eigen::VectorXd logMarks = -gp;
+  logMarks.head(x.rows()) += marks.array().log().matrix();
+  logMarks.tail(xprime.rows()) += marksPrime.array().log().matrix();
 
   // Sampling the nugget
-  int counter = 0;
-  double propNugget, propDens = 0, prevDens = 0, temp;
-  do {
-    propNugget = R::rnorm(marksNugget, 0.1);
-  } while (propNugget < 0 && ++counter < 100);
-  if (counter == 100)
-    Rf_warning("Nugget parameter attempts reached max iterations without a positive value.");
-
-  temp = (logExpected.array() - marksMu).matrix().squaredNorm();
-  propDens = -0.5 * (propNugget + temp) - (marksNuggetPriora + 1) * log(marksNugget) - marksNuggetPriorb / marksNugget;
-  prevDens = -0.5 * (marksNugget + temp) - (marksNuggetPriora + 1) * log(propNugget) - marksNuggetPriorb / propNugget;
-
-  double partialDens = prevDens;
-  if (log(R::runif(0, 1)) <= propDens - prevDens) {
-    marksNugget = propNugget;
-    partialDens = propDens;
-  }
-  marksNugget = 0.5;
+  marksNugget = 1 / rgamma(marksNuggetPriora + gp.size() / 2,
+                           1 / (marksNuggetPriorb +
+                             (logMarks.array() - marksMu).square().sum() / 2));
 
   // Sampling the mean parameter
-  double newVariance = 1 / (1 / marksMuPriors2 + marksExpected.size() / marksNugget);
-  marksMu = R::rnorm(
+  double newVariance = 1 / (1 / marksMuPriors2 + gp.size() / marksNugget);
+  marksMu = rnorm(
     newVariance *
-      (marksMuPriormu / marksMuPriors2 + logExpected.sum() / marksNugget),
+      (marksMuPriormu / marksMuPriors2 + logMarks.sum() / marksNugget),
       sqrt(newVariance)
   );
-  marksMu = 5;
 
-  // Sampling the shape parameter
-  counter = 0;
-  double propShape;
-  temp = marksExpected.array().log().sum() +
-    (marks.array() / marksExpected.head(x.rows()).array()).sum() +
-    (marksPrime.array() / marksExpected.tail(xprime.rows()).array()).sum();
-  double logVals = marks.array().log().sum() + marksPrime.array().log().sum();
-  prevDens = marksShape * (log(marksShape) - temp) - lgamma(marksShape) +
-    (marksShape - 1) * logVals + (marksShapePriora - 1) * log(marksShape) -
-    marksShapePriorb * marksShape;
-  do {
-    propShape = R::rnorm(marksShape, 0.1);
-  } while (propShape < 0 && ++counter < 100);
-  if (counter == 100) {
-    Rf_warning("Shape parameter attempts reached max iterations without a positive value.");
-  } else {
-    propDens = propShape * (log(propShape) - temp) - lgamma(propShape) +
-      (propShape - 1) * logVals + (marksShapePriora - 1) * log(propShape) -
-      marksShapePriorb * propShape;
-    if (log(R::runif(0, 1)) <= propDens - prevDens) {
-      marksShape = propShape;
-      marksShape = 1.5;
-      return partialDens + propDens;
-    }
-  }
-  marksShape = 1.5;
-  return partialDens + prevDens;
+  return 0.;
 }
 
 inline double PresenceOnly::applyTransitionKernel() {
   double out, privateOut1, privateOut2;
-  out = sampleProcesses() + updateLambdaStar();
-#pragma omp parallel
-{
-#pragma omp sections
-{
-#pragma omp section
+  out = sampleProcesses();
+  out += updateLambdaStar();
+// #pragma omp parallel
+// {
+// #pragma omp sections
+// {
+// #pragma omp section
   privateOut1 = beta->sample(xxprimeIntensity, uIntensity);
-#pragma omp section
+// #pragma omp section
   privateOut2 = delta->sample(xObservability, xprimeObservability);
-}
-}
-  out += updateMarksPars(bkg->getGPfull(OBSERVABILITY_VARIABLES));
-  bkg->resampleGPs(marksMu, marksNugget, marksShape, marksExpected,
-                 marks, marksPrime, delta->getNormalMean(), delta->getExtra(),
+// }
+// }
+  bkg->resampleGPs(marksMu, marksNugget,
+                 marks, marksPrime, delta->getNormalMean(),
+                 delta->getDataAugmentation(),
                  delta->getBeta()(delta->getSize() - 1));
+  out += updateMarksPars(bkg->getGPfull(OBSERVABILITY_VARIABLES));
   return out + privateOut1 + privateOut2;
 }
 

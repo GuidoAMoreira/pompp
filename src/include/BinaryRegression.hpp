@@ -42,7 +42,7 @@ public:
   Eigen::VectorXd getBeta() {return betas;}
   int getSize() {return n;}
   Eigen::VectorXd getNormalMean() {return normalMean;}
-  virtual Eigen::VectorXd getExtra() = 0; // For data augmentation variables
+  virtual Eigen::VectorXd getDataAugmentation() = 0; // For data augmentation variables
   // Some setters
   void setNormalMean(Eigen::VectorXd newValue) {normalMean = newValue;}
   void setBeta(Eigen::VectorXd newValue) {betas = newValue;}
@@ -52,7 +52,7 @@ class LogisticRegression : public BinaryRegression {
   // Data augmentation
   Eigen::VectorXd pg;
 public:
-  Eigen::VectorXd getExtra() {return pg;}
+  Eigen::VectorXd getDataAugmentation() {return pg;}
 
   LogisticRegression(Eigen::VectorXd initialize, RegressionPrior* p) :
     BinaryRegression(initialize, p), pg(Eigen::VectorXd(0)) {}

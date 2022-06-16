@@ -37,8 +37,6 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
     pg[i] = draw_from_PolyaGamma(xb1(i));
     priV += pg[i] * x1.row(i).transpose() * x1.row(i);
     priMed += x1.row(i) * 0.5;
-    newNormalMean(i) = (0.5 - (xb1(i) - x1(i, n - 1) * betas(n - 1)) * pg[i]) *
-      betas(n - 1);
   }
 #pragma omp for nowait
   for (int i = 0; i < n0; i++) // From the data matrix X
@@ -46,8 +44,6 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
     pg[n1 + i] = draw_from_PolyaGamma(xb0(i));
     priV += pg[n1 + i] * x0.row(i).transpose() * x0.row(i);
     priMed -= x0.row(i) * 0.5;
-    newNormalMean(n1 + i) = (-0.5 - (xb0(i) - x0(i, n - 1) * betas(n - 1)) * pg[n1 + i]) *
-      betas(n - 1);
   }
 #pragma omp critical
 {
@@ -55,9 +51,15 @@ double LogisticRegression::sample(const Eigen::MatrixXd& onesCovariates,
   med += priMed;
 }
 }
-  setNormalMean(newNormalMean);
-
   betas = prior->sample(med, V);
+
+  // Used in the Gaussian Process resampling
+  Eigen::VectorXd kappas(n1 + n0);
+  kappas.head(n1) = Eigen::MatrixXd::Constant(n1, 1, 0.5) -
+    ((x1.leftCols(n - 1) * betas.head(n - 1)).array() * pg.head(n1).array()).matrix();
+  kappas.tail(n0) = Eigen::MatrixXd::Constant(n0, 1, -0.5) -
+    ((x0.leftCols(n - 1) * betas.head(n - 1)).array() * pg.tail(n0).array()).matrix();
+  setNormalMean(kappas * betas(n - 1));
 
   return link(onesCovariates, betas, false).sum() +
     link(zerosCovariates, betas, true).sum() +

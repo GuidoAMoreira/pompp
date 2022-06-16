@@ -39,15 +39,15 @@ public:
     return Eigen::MatrixXd(0, 0);
   }
   Eigen::VectorXd getVarVec(const Eigen::VectorXd& coordinates,
-                            double& mark, double& markExpected,
-                            double shape, double nugget, double mu, int type) {
+                            double& mark,
+                            double nugget, double mu, int type) {
     if (type == INTENSITY_VARIABLES) {
       Eigen::VectorXd out(intensityCols.size() + (useGPint ? 1 : 0));
       out.head(intensityCols.size()) = getVariablesVec(coordinates, intensityCols);
       if (useGPint)
         out(intensityCols.size()) =
           spatialProcessInt->getNewPoint(coordinates.head(2),
-            mark, markExpected, shape, nugget, mu);
+            mark, nugget, mu);
       return out;
     }
     if (type == OBSERVABILITY_VARIABLES) {
@@ -56,7 +56,7 @@ public:
       if (useGPobs)
         out(observabilityCols.size()) =
           spatialProcessObs->getNewPoint(coordinates.head(2),
-            mark, markExpected, shape, nugget, mu);
+            mark, nugget, mu);
       return out;
     }
     return Eigen::VectorXd(0);
@@ -93,14 +93,13 @@ public:
 
   // Resampler
   void resampleGPs(double marksMu, double marksVariance,
-                   double marksShape, Eigen::VectorXd& marksExpected,
                    const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
                    const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs,
                    double gamma) {
     if (useGPint) spatialProcessInt->resampleGP(marksMu, marksVariance,
-        marksShape, marksExpected, xMarks, xPrimeMarks, betasPart, pgs, gamma);
+        xMarks, xPrimeMarks, betasPart, pgs, gamma);
     if (useGPobs) spatialProcessObs->resampleGP(marksMu, marksVariance,
-        marksShape, marksExpected, xMarks, xPrimeMarks, betasPart, pgs, gamma);
+        xMarks, xPrimeMarks, betasPart, pgs, gamma);
   }
 
   // Random point (for point process simulation)
