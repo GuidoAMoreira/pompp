@@ -7,14 +7,10 @@
 
 Eigen::VectorXd NormalPrior::sample(const Eigen::VectorXd& mean,
                                     const Eigen::MatrixXd& precision) {
-  Eigen::LLT<Eigen::MatrixXd> decomp;
-  decomp.compute(precision + priorPrecision);
-  Eigen::VectorXd output;
+  sigmaSolver.compute(precision + priorPrecision);
 
-  output = decomp.matrixU().solve(rnorm(mean.size())) +
-    decomp.solve(mean + precisionTimesMean);
-
-  return output;
+  return sigmaSolver.matrixU().solve(rnorm(mean.size())) +
+    sigmaSolver.solve(mean + precisionTimesMean);
 }
 
 inline double NormalPrior::logPrior(const Eigen::VectorXd& betas) {

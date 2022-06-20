@@ -46,8 +46,7 @@ public:
       out.head(intensityCols.size()) = getVariablesVec(coordinates, intensityCols);
       if (useGPint)
         out(intensityCols.size()) =
-          spatialProcessInt->getNewPoint(coordinates.head(2),
-            mark, nugget, mu);
+          spatialProcessInt->getNewPoint(coordinates.head(2), mark, nugget, mu);
       return out;
     }
     if (type == OBSERVABILITY_VARIABLES) {
@@ -55,8 +54,7 @@ public:
       out.head(observabilityCols.size()) = getVariablesVec(coordinates, observabilityCols);
       if (useGPobs)
         out(observabilityCols.size()) =
-          spatialProcessObs->getNewPoint(coordinates.head(2),
-            mark, nugget, mu);
+          spatialProcessObs->getNewPoint(coordinates.head(2), mark, nugget, mu);
       return out;
     }
     return Eigen::VectorXd(0);

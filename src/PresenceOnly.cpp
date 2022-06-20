@@ -137,16 +137,16 @@ inline double PresenceOnly::applyTransitionKernel() {
   double out, privateOut1, privateOut2;
   out = sampleProcesses();
   out += updateLambdaStar();
-// #pragma omp parallel
-// {
-// #pragma omp sections
-// {
-// #pragma omp section
+#pragma omp parallel
+{
+#pragma omp sections
+{
+#pragma omp section
   privateOut1 = beta->sample(xxprimeIntensity, uIntensity);
-// #pragma omp section
+#pragma omp section
   privateOut2 = delta->sample(xObservability, xprimeObservability);
-// }
-// }
+}
+}
   bkg->resampleGPs(marksMu, marksNugget,
                  marks, marksPrime, delta->getNormalMean(),
                  delta->getDataAugmentation(),

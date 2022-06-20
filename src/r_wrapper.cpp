@@ -102,8 +102,8 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
   {
     R_CheckUserInterrupt();
     mc.update(thin);
-    outBetas.row(i) = mc.getBeta();
-    outDeltas.row(i) = mc.getDelta();
+    outBetas.row(i) = mc.getBeta().transpose();
+    outDeltas.row(i) = mc.getDelta().transpose();
     outLambdas[i] = mc.getLambdaStar();
     outMus[i] = mc.getMarksMu();
     outNuggets[i] = mc.getMarksNugget();

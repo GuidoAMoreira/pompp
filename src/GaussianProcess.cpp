@@ -147,12 +147,14 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords, double& mark,
     iterationMean += augmentedValues(neighborhood[i]) * Arow(i);
 
   // Variable transformation
-  double x, y;
-  x = rnorm(mu, sqrt(nugget));
-  y = rnorm(iterationMean, sqrt(propD));
+  double x, y, totalVariance = propD + nugget;
+  x = rnorm(nugget / totalVariance * iterationMean,
+            sqrt(nugget * propD / totalVariance));
+  y = rnorm(- nugget * iterationMean / (totalVariance + propD),
+            sqrt(totalVariance * nugget / (totalVariance + propD)));
 
-  mark = exp(x + y);
-  propValue = y;
+  mark = exp(y + mu);
+  propValue = x + propD * y / totalVariance;
 }
 
 std::vector<int> NNGP::getNeighorhood(Eigen::VectorXd coords) {
@@ -221,6 +223,7 @@ void NNGP::resampleGP(double marksMu, double marksVariance,
   xPrimeMarks = (rnorm(n, 0, sqrt(marksVariance)).array() + marksMu +
     augmentedValues.tail(n).array()).exp();
 
+  // For the Gaussian Process, sample from the normal conditional on the marks
   precision.diagonal().array() += pgs.array() * (gamma * gamma) + 1 / marksVariance;
   sqrtC.compute(precision);
   Eigen::VectorXd randomPart = sqrtC.matrixU().solve(rnorm(precision.rows()));
@@ -248,7 +251,7 @@ void NNGP::bootUpIminusA() {
 
   Eigen::LDLT<Eigen::MatrixXd> miniSolver;
   miniSolver.compute(covariances);
-  Eigen::MatrixXd miniIminusA = miniSolver.matrixL().solve(Eigen::MatrixXd::Identity(xSize, xSize));
+  Eigen::MatrixXd miniIminusA = miniSolver.matrixU().solve(Eigen::MatrixXd::Identity(neighborhoodSize, neighborhoodSize)).transpose();
   for (i = 0; i < neighborhoodSize; i++) {
     for (j = 0; j < i; j++)
       trips.push_back(Eigen::Triplet<double>(i, j, miniIminusA(i, j)));
@@ -260,8 +263,8 @@ void NNGP::bootUpIminusA() {
         pastCovariancesPositions(i, j) = j;
         pastCovariances(i, j) = covariances(i, j);
       } else {
-        pastCovariancesPositions(i, j) = i;
-        pastCovariances(i, j) = covFun->getSigma2();
+        pastCovariancesPositions(i, j) = -1;
+        pastCovariances(i, j) = 0;
       }
     }
   }

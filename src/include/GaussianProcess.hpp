@@ -23,7 +23,7 @@ public:
 
   GaussianProcess(int s) : xSize(s) {}
   GaussianProcess(Eigen::MatrixXd pos, int s,
-                  CovarianceFunction* cf) : xSize(s), tempSize(0),
+                  CovarianceFunction* cf) : xSize(s),
   positions(pos.leftCols(2)),
   values(rnorm(xSize)),
   covFun(cf) {augmentedValues = values;}
@@ -44,7 +44,7 @@ public:
 protected:
   const int xSize; // Used in start up and close up
   Eigen::VectorXd values;
-  int tempAcc, tempSize; // Used in start up and close up
+  int tempAcc; // Used in start up and close up
   int parameterSize, currentIndex;
   Eigen::MatrixXd positions, covariances, augmentedPositions, augmentedCovariances;
   Eigen::VectorXd augmentedValues;

@@ -21,8 +21,8 @@ runMCMC <- fit_pompp(
   simulated$observedMarks, simulated$X,
   1:3, 4:5, 1:3, 4:5,
   sqrt(2), sigma2, phi,
-  20, 6, 7,
-  50000, 10, 100000, 6
+  50, 6, 7,
+  10000, 1, 20000, 6
 )
 print(Sys.time() - time)
 # sink("output.txt")
@@ -39,7 +39,7 @@ print(Sys.time() - time)
 #   1:3, 4:5, 1:3, 4:5,
 #   sqrt(2), sigma2, phi,
 #   5, 6, 7,
-#   0, 1, 5, 1
+#   0, 1, 500, 1
 # )
 # sink()
 

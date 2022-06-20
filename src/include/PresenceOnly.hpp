@@ -65,11 +65,6 @@ public:
     xxprimeIntensity = xIntensity;
     xprimeObservability = Eigen::MatrixXd(0, 0);
     uIntensity = Eigen::MatrixXd(0, 0);
-    if (!delta->getBeta()(delta->getSize() - 1)) {
-      Eigen::VectorXd tempDelta = delta->getBeta();
-      tempDelta(tempDelta.size() - 1) = 0.01;
-      delta->setBeta(tempDelta);
-    }
   }
   ~PresenceOnly() {delete beta; delete delta; delete bkg;}
 

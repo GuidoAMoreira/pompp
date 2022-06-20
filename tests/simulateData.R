@@ -30,13 +30,12 @@ Xobs <- cbind(grf(1, grid = rbind(occurrencesPositions, squareGrid), cov.model =
                   cov.pars = c(sigma2, phi), kappa = 0, method = "cholesky")$data,
               grf(1, grid = rbind(occurrencesPositions, squareGrid), cov.model = "exponential",
                   cov.pars = c(sigma2, phi), kappa = 0, method = "cholesky")$data)
-S <- grf(1, grid = rbind(occurrencesPositions), cov.model = "exponential",
+S <- grf(1, grid = occurrencesPositions, cov.model = "exponential",
          cov.pars = c(sigma2, phi), kappa = 0, method = "cholesky")$data
 
 unifs2 <- runif(intensitySelected)
 observabilitySelection <- which(log(unifs2) - log1p(-unifs2) <=
-  delta[1] + Xobs[1:intensitySelected, ] %*% delta[2:nd] +
-    gamma * S)
+  delta[1] + Xobs[1:intensitySelected, ] %*% delta[2:nd] + gamma * S)
 observabilitySelected <- length(observabilitySelection)
 
 marks <- rgamma(intensitySelected, shape, shape / exp(mu + S + rnorm(intensitySelected, 0, sqrt(nugget))))

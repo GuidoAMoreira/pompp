@@ -11,7 +11,7 @@ double rexp(double);
 double rnorm(double, double);
 
 #define __PI 3.141592653589793238462643383279502884197
-#define LOG4OVERPI -1.755298292469902497163499225627832025
+#define LOG4OVERPI 0.24156447527049048367275521675704965061
 #define __TRUNC 0.64
 #define __TRUNC_RECIP 1.5625
 
@@ -22,8 +22,8 @@ static inline double mass_texpon(double Z, double fz)
   double x0 = log(fz) + fz * __TRUNC;
 
   return -log1pexp(LOG4OVERPI + logspace_add(
-      x0 - Z + pnorm(sqrt(1.0 / __TRUNC) * (__TRUNC * Z - 1),0,1,1, 1),
-      x0 + Z + pnorm(sqrt(1.0 / __TRUNC) * (__TRUNC * Z + 1) * -1.0,0,1,1, 1)
+      x0 - Z + pnorm(sqrt(1.0 / __TRUNC) * (__TRUNC * Z - 1), 0, 1, 1, 1),
+      x0 + Z + pnorm(sqrt(1.0 / __TRUNC) * (__TRUNC * Z + 1) * -1.0, 0, 1, 1, 1)
   ));
 }
 
@@ -71,7 +71,7 @@ static inline double a(int n, double x)
     double expnt = -1.5 * (log(0.5 * __PI)  + log(x)) + log(K) - 2.0 * (n+0.5)*(n+0.5) / x;
     return exp(expnt);
   }
-  return 0;
+  return 0.;
 }
 
 #endif
