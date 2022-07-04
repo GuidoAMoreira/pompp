@@ -12,7 +12,6 @@ double PresenceOnly::updateLambdaStar() {
   double a = aL + x.rows() + xprime.rows() + u.rows(),
     b = bL + area;
   lambdaStar = rgamma(a, 1 / b);
-//  lambdaStar = 1000;
 
   return - lambdaStar * b + (a - 1) * log(lambdaStar);
 }

@@ -88,13 +88,9 @@ void GaussianProcess::closeUp() {
     augmentedCovariances.block(bigSize - tempAcc, 0, tempAcc, xSize);
 }
 
-double GaussianProcess::calcDist(Eigen::VectorXd p1, Eigen::VectorXd p2) {
-  double temp, d = 0;
-  for (int i = 0; i < 2; i++) {
-    temp = p1(i) - p2(i);
-    d += temp * temp;
-  }
-  return sqrt(d);
+inline double GaussianProcess::calcDist(Eigen::VectorXd p1, Eigen::VectorXd p2) {
+  Eigen::VectorXd temp = p1 - p2;
+  return hypot(temp(0), temp(1));
 }
 
 void GaussianProcess::resampleGP(double marksMu, double marksVariance,
@@ -105,9 +101,8 @@ void GaussianProcess::resampleGP(double marksMu, double marksVariance,
   Eigen::VectorXd temp = Eigen::MatrixXd::Constant(n, 1, 1 / marksVariance);
   Eigen::MatrixXd newPrec = covariances.inverse() + pgs + temp;
 
-  augmentedValues = newPrec.llt().matrixL().transpose().solve(
-    Rcpp::as<Eigen::Map<Eigen::VectorXd> >(Rcpp::rnorm(n, 0, 1))
-  ) + betasPart +( (xPrimeMarks.array().log() - marksMu) / marksVariance).matrix();
+  augmentedValues = newPrec.llt().matrixU().solve(rnorm(n)) + betasPart +
+    ( (xPrimeMarks.array().log() - marksMu) / marksVariance).matrix();
 }
 
 //// NNGP starts here ////
@@ -248,10 +243,10 @@ void NNGP::bootUpIminusA() {
     }
     covariances(i, i) = covFun->getSigma2();
   }
-
   Eigen::LDLT<Eigen::MatrixXd> miniSolver;
+
   miniSolver.compute(covariances);
-  Eigen::MatrixXd miniIminusA = miniSolver.matrixU().solve(Eigen::MatrixXd::Identity(neighborhoodSize, neighborhoodSize)).transpose();
+  Eigen::MatrixXd miniIminusA = miniSolver.matrixL().solve(Eigen::MatrixXd::Identity(neighborhoodSize, neighborhoodSize));
   for (i = 0; i < neighborhoodSize; i++) {
     for (j = 0; j < i; j++)
       trips.push_back(Eigen::Triplet<double>(i, j, miniIminusA(i, j)));

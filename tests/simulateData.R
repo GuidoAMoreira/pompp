@@ -45,6 +45,8 @@ observedXint <- occurrencesXint[observabilitySelection, ]
 observedXobs <- Xobs[observabilitySelection, ]
 observedMarks <- marks[observabilitySelection]
 
+cat(glue::glue("Simulation successful. There are {observabilitySelected} observed presences and {intensitySelected - observabilitySelected} unobserved presences.\n"))
+
 saveRDS(
   list(Xint = Xint[-(1:totalPoints), ], Xobs = Xobs[-(1:intensitySelected),],
        grid = squareGrid, X = observedPositions,

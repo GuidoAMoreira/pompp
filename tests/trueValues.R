@@ -1,6 +1,6 @@
-beta <- c(1, -1, 2, -1.5)
+beta <- c(-2, -1, 2, -1.5)
 delta <- c(-1, -1, -2)
-lambdaStar <- 1000
+lambdaStar <- 6000
 gamma <- 2
 shape <- 1.5
 nugget <- 0.5
