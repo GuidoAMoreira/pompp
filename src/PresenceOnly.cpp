@@ -29,53 +29,34 @@ double PresenceOnly::sampleProcesses() {
    * so there is no loss.
    */
   long totalPoints = rpois(lambdaStar * area);
-  if (totalPoints <= x.rows()) {
-    xprime.resize(0, 3);
-    u.resize(0, 3);
-    xxprimeIntensity = xIntensity;
-    xprimeObservability.resize(0, delta->getSize() - 1);
-    uIntensity.resize(0, beta->getSize() - 1);
-    bkg->startGPs(0);
-    bkg->setGPinStone();
-    marksPrime = Eigen::VectorXd(0);
-    return 0.;
-  }
 
   // Sampling from X' and U
-  bool stillSampling;
-  totalPoints -= x.rows(); // Number of points associated to them
   double p, q, uniform;
-  long accXp = 0, accU = 0, currentAttempt;
+  long accXp = 0, accU = 0;
   Eigen::VectorXd candidate;
   Eigen::MatrixXd storingCoords(totalPoints, 3); // Put X' on top and U on bottom
   marksPrime = Eigen::VectorXd(totalPoints);
   bkg->startGPs(totalPoints);
   for (int i = 0; i < totalPoints; i++) {
-    currentAttempt = 0;
-    stillSampling = true;
-    while (stillSampling && ++currentAttempt < MAX_ATTEMPTS_GP) {
-      R_CheckUserInterrupt();
-      candidate = bkg->getRandomPoint();
-      uniform = log(runif(0, 1));
-      q = beta->link(bkg->getVarVec(candidate,
-                                    INTENSITY_VARIABLES).transpose())(0);
-      if (uniform > q) { // Assign to U
-        storingCoords.row(totalPoints - ++accU) = candidate.transpose();
-        bkg->acceptNewPoint(INTENSITY_VARIABLES);
-        stillSampling = false;
-      } else {
-        p = delta->link(bkg->getVarVec(candidate,
-                                       marksPrime(accXp),
-                                       marksNugget, marksMu,
-                                       OBSERVABILITY_VARIABLES).transpose())(0);
-        if (uniform > p + q) { // Assign to X'
-          storingCoords.row(accXp++) = candidate.transpose();
-          bkg->acceptNewPoint(OBSERVABILITY_VARIABLES);
-          stillSampling = false;
-        } // Else discard candidate and try again.
-      }
+#pragma omp critical
+    R_CheckUserInterrupt();
+    candidate = bkg->getRandomPoint();
+    uniform = log(runif(0, 1));
+    q = beta->link(bkg->getVarVec(candidate,
+                                  INTENSITY_VARIABLES).transpose())(0);
+    if (uniform > q) { // Assign to U
+      storingCoords.row(totalPoints - ++accU) = candidate.transpose();
+      bkg->acceptNewPoint(INTENSITY_VARIABLES);
+    } else {
+      p = delta->link(bkg->getVarVec(candidate,
+                                     marksPrime(accXp),
+                                     marksNugget, marksMu,
+                                     OBSERVABILITY_VARIABLES).transpose())(0);
+      if (uniform > p + q) { // Assign to X'
+        storingCoords.row(accXp++) = candidate.transpose();
+        bkg->acceptNewPoint(OBSERVABILITY_VARIABLES);
+      } // Else discard candidate and try again.
     }
-    if (currentAttempt == MAX_ATTEMPTS_GP) Rf_warning("GP sampling reached max attempts.");
   }
   bkg->setGPinStone();
 
