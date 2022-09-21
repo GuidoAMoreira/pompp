@@ -63,9 +63,9 @@ methods::setClass("pompp_model",
     if (any(s("observabilitySelection") != as.integer(s("observabilitySelection")))) stop("observabilitySelection must be integers.")
     if (any(s("coordinates") != as.integer(s("coordinates")))) stop("coordinates must be integers.")
     if (length(s("coordinates")) != 2) stop("coordinates must have two elements.")
-    nbSel = length(s("intensitySelection")) + 1; ndSel = length(s("observabilitySelection")) + 1
+    nbSel = length(s("intensitySelection")) + 1; ndSel = length(s("observabilitySelection")) + 2
     if ((length(s("marksSelection")) != 1) || (s("marksSelection") != as.integer(s("marksSelection")))) stop("marksSelection must be a single integer.")
-    if (length(coordinates) != 2) stop("coordinates must contain 2 values: the columns of the coordinates. Longitude and latitude, in this order.")
+    if (length(s("coordinates")) != 2) stop("coordinates must contain 2 values: the columns of the coordinates. Longitude and latitude, in this order.")
     for (i in s("init")){
       if (!is(i,"pompp_initial")) stop("Initial values must be constructed with the initial function.")
       if (length(methods::slot(i,"beta")) != nbSel) stop(paste("\nInitial values for beta has the wrong size. Expected size:", nbSel))

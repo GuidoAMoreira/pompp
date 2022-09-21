@@ -72,12 +72,13 @@ NULL
 #' NormalPrior(0, 100), GammaPrior(0.001, 0.001) # Marks
 #' )
 #'
-#' model <- pompp_model(po = cbind(po_Z, po_W, po_marks),
-#' intensitySelection = 1, observabilitySelection = 2, marksSelection = 3,
+#' model <- pompp_model(po = cbind(po_Z, po_W, po_points, po_marks),
+#' intensitySelection = 1, observabilitySelection = 2, marksSelection = 5,
+#'                     coordinates = 3:4,
 #'                     intensityLink = "logit", observabilityLink = "logit",
 #'                     initial_values = 2, joint_prior = jointPrior)
 #'
-#' bkg <- cbind(Z2, W2) # Create background
+#' bkg <- cbind(Z2, W2, reg_grid) # Create background
 #'
 #' fit <- fit_pompp(model, bkg, area = 1, mcmc_setup = list(burnin = 1000, iter = 2000))
 #'
@@ -110,7 +111,6 @@ methods::setMethod("fit_pompp",
                    function(object, background, neighborhoodSize = 20, mcmc_setup, verbose = TRUE, area = 1, cores = parallel::detectCores(), ...){
                      ## Verifying background names if columns are selected by column name. Crewating background selection variables
                      backConfig <- checkFormatBackground(object, background)
-                     cores <- 1
 
                      # Helper function
                      s <- function(n) methods::slot(object, n)
@@ -118,6 +118,7 @@ methods::setMethod("fit_pompp",
                      ## Verifying area
                      stopifnot(length(area) == 1, area > 0)
                      ## Verifying mcmc_setup - begin
+                     stopifnot(is.list(mcmc_setup))
                      if (is.null(mcmc_setup$burnin)) mcmc_setup$burnin <- 0
                      if (is.null(mcmc_setup$thin)) mcmc_setup$thin <- 1
                      mcmc_setup$burnin <- as.numeric(mcmc_setup$burnin)
@@ -159,8 +160,8 @@ methods::setMethod("fit_pompp",
                      ## Determining GP hyperparameters
                      cat("Preparing model parameters.\n")
                      fitted <- geoR::likfit(
-                       geoR::as.geodata(s("po")[
-                         c(s("coordinates"), s("marks"))
+                       geoR::as.geodata(s("po")[,
+                         c(s("coordinates"), s("marksSelection"))
                        ]), lambda = 0, ini.cov.pars = c(1, 1),
                        cov.model = "exponential", fix.nugget = FALSE,
                        messages = FALSE
@@ -238,7 +239,6 @@ methods::setMethod("fit_pompp", signature(object = "pompp_fit",
                      s <- function(n) methods::slot(object, n)
                      so <- function(n) methods::slot(s("original"), n)
                      backConfig <- checkFormatBackground(s("original"), background)
-                     cores <- 1
 
                      # Check background differences
                      if (verbose) cat("Checking if everything's ok...")
@@ -452,9 +452,9 @@ checkFormatBackground <- function(object,background){
 #' po_marks <- marks[po_sightings]
 #'
 #' # Now we create the model
-#' model <- pompp_model(po = cbind(po_Z, po_W, po_marks),
+#' model <- pompp_model(po = cbind(po_Z, po_W, po_points, po_marks),
 #'   intensitySelection = 1, observabilitySelection = 2,
-#'   marksSelection = 3,
+#'   marksSelection = 5, coordinates = 3:4,
 #'   intensityLink = "logit", observabilityLink = "logit",
 #'   initial_values = 2, joint_prior = prior(
 #'     NormalPrior(rep(0, 2), 10 * diag(2)),
@@ -515,13 +515,13 @@ pompp_model = function(po, intensitySelection,
         observabilitySelection = c(observabilitySelection,which(selected==colnames(po)))
       }
     }
-  if (is.numeric(marksSelection)) marksS = character() else
+  if (is.numeric(marksSelection)) marksSel = character() else
     if (is.character(marksSelection)) {
-      marksS = marksSelection
+      marksSel = marksSelection
       if (!(marksS %in% colnames(po))) stop(paste0("Column",
                                                    marksS,
                                                    "not found in the observed points covariates."))
-      marksSel = which(marksS == colnames(po))
+      marksSelection = which(marksS == colnames(po))
     }
   if (is.numeric(coordinates)) coordCharSel = character() else
     if (is.character(coordinates)){ # Create columns positions for intensity
@@ -538,26 +538,26 @@ pompp_model = function(po, intensitySelection,
     initial_values = list(initial_values)
   if (is.numeric(initial_values))
     initial_values = initial(length(intensitySelection) + 1,
-                             length(observabilitySelection) + 1,
-                             nrow(po), random=TRUE) * initial_values
+                             length(observabilitySelection) + 2,
+                             nrow(po), 0, 1, random=TRUE) * initial_values
 
   if (verbose) cat("Loading data with", nrow(po), "observed points.\n")
   output <- methods::new("pompp_model", po = po, intensityLink = intensityLink,
                          intensitySelection = intensitySelection,
                          observabilityLink = observabilityLink,
                          observabilitySelection = observabilitySelection,
-                         marksSelection = marksSel,
+                         marksSelection = marksSelection,
                          coordinates = coordinates,
                          init = initial_values, prior = joint_prior,
                          iSelectedColumns = icharSel, oSelectedColumns = ocharSel,
-                         mSelectedColumns = marksS, cSelectedColumns = coordCharSel)
+                         mSelectedColumns = marksSel, cSelectedColumns = coordCharSel)
   if (verbose) {
     cat("Data loaded successfully with ", length(intensitySelection), " intensity variables and ",
         length(observabilitySelection), " observability variables selected.\n", length(initial_values), " chains ",
         ifelse(length(initial_values) > 1, "were", "was"), " initialized.\n", sep = "")
     if (!length(icharSel)) cat("Intensity covariates selected with column indexes. Make sure the background covariates are in the same position.\n")
     if (!length(ocharSel)) cat("Observability covariates selected with column indexes. Make sure the background covariates are in the same position.\n")
-    if (!length(ccharSel)) cat("Coordinates selected with column indexes. Make sure the background covariates are in the same position.\n")
+    if (!length(coordCharSel)) cat("Coordinates selected with column indexes. Make sure the background covariates are in the same position.\n")
   }
 
   return(output)

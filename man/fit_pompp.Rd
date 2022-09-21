@@ -120,12 +120,13 @@ GammaPrior(0.00001, 0.00001), # LambdaStar
 NormalPrior(0, 100), GammaPrior(0.001, 0.001) # Marks
 )
 
-model <- pompp_model(po = cbind(po_Z, po_W, po_marks),
-intensitySelection = 1, observabilitySelection = 2, marksSelection = 3,
+model <- pompp_model(po = cbind(po_Z, po_W, po_points, po_marks),
+intensitySelection = 1, observabilitySelection = 2, marksSelection = 5,
+                    coordinates = 3:4,
                     intensityLink = "logit", observabilityLink = "logit",
                     initial_values = 2, joint_prior = jointPrior)
 
-bkg <- cbind(Z2, W2) # Create background
+bkg <- cbind(Z2, W2, reg_grid) # Create background
 
 fit <- fit_pompp(model, bkg, area = 1, mcmc_setup = list(burnin = 1000, iter = 2000))
 

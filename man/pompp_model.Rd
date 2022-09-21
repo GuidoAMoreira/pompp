@@ -107,9 +107,9 @@ po_W <- W[po_sightings]
 po_marks <- marks[po_sightings]
 
 # Now we create the model
-model <- pompp_model(po = cbind(po_Z, po_W, po_marks),
+model <- pompp_model(po = cbind(po_Z, po_W, po_points, po_marks),
   intensitySelection = 1, observabilitySelection = 2,
-  marksSelection = 3,
+  marksSelection = 5, coordinates = 3:4,
   intensityLink = "logit", observabilityLink = "logit",
   initial_values = 2, joint_prior = prior(
     NormalPrior(rep(0, 2), 10 * diag(2)),
