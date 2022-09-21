@@ -20,7 +20,8 @@ LinkingTo:
     RcppProgress
 Imports: 
     Rcpp,
-    RcppProgress
+    RcppProgress,
+    geoR
 Collate: 
     'RcppExports.R'
     'covariance_importance.R'
