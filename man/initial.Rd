@@ -52,10 +52,10 @@ fit_pompp function.
 # cases due to the intercepts.
 
 # This first one is
-in1 <- initial(rep(0, 4), c(0, 2, -1, -2, 3), 100)
+in1 <- initial(rep(0, 4), c(0, 2, -1, -2, 3), 100, 0, 1)
 
 # Then we initalize some randomly.
-in2 <- initial(4, 5, 100, random = TRUE)
+in2 <- initial(4, 5, 100, 0, 1, random = TRUE)
 
 # We can even multiply the random one to generate more. Let us join them all
 # to include in a model.

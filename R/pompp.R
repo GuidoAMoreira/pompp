@@ -80,7 +80,8 @@ NULL
 #' bkg <- cbind(Z2, W2, reg_grid) # Create background
 #'
 #' # Be prepared to wait a long time for this
-#' fit <- fit_pompp(model, bkg, area = 1, mcmc_setup = list(burnin = 1000, iter = 2000))
+#' fit <- fit_pompp(model, bkg, neighborhoodSize = 20, area = 1,
+#'   mcmc_setup = list(burnin = 1000, iter = 2000))
 #'
 #' summary(fit)
 #'
@@ -460,6 +461,7 @@ checkFormatBackground <- function(object, background){
 #'     NormalPrior(0, 100), GammaPrior(0.001, 0.001)))
 #' # Check how it is.
 #' model
+#' @importFrom methods is show
 #' @export
 pompp_model = function(po, intensitySelection,
                          observabilitySelection,
@@ -515,10 +517,10 @@ pompp_model = function(po, intensitySelection,
   if (is.numeric(marksSelection)) marksSel = character() else
     if (is.character(marksSelection)) {
       marksSel = marksSelection
-      if (!(marksS %in% colnames(po))) stop(paste0("Column",
-                                                   marksS,
-                                                   "not found in the observed points covariates."))
-      marksSelection = which(marksS == colnames(po))
+      if (!(marksSel %in% colnames(po))) stop(paste0("Column",
+                                                     marksSel,
+                                                     "not found in the observed points covariates."))
+      marksSelection = which(marksSel == colnames(po))
     }
   if (is.numeric(coordinates)) coordCharSel = character() else
     if (is.character(coordinates)){ # Create columns positions for intensity

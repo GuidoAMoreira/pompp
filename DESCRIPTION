@@ -20,8 +20,17 @@ LinkingTo:
     RcppProgress
 Imports: 
     Rcpp,
-    RcppProgress,
-    geoR
+    coda,
+    geoR,
+    parallel,
+    methods,
+    graphics,
+    stats,
+    tools
+Suggests:
+    bayesplot,
+    ggplot2,
+    MASS
 Collate: 
     'RcppExports.R'
     'covariance_importance.R'

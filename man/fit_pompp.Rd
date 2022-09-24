@@ -121,7 +121,8 @@ intensitySelection = 1, observabilitySelection = 2, marksSelection = 5,
 bkg <- cbind(Z2, W2, reg_grid) # Create background
 
 # Be prepared to wait a long time for this
-fit <- fit_pompp(model, bkg, area = 1, mcmc_setup = list(burnin = 1000, iter = 2000))
+fit <- fit_pompp(model, bkg, neighborhoodSize = 20, area = 1,
+  mcmc_setup = list(burnin = 1000, iter = 2000))
 
 summary(fit)
 
