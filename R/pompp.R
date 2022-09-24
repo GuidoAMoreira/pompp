@@ -22,7 +22,6 @@ NULL
 #' @details The background is kept outside of the
 #' @seealso \code{\link{pompp_model}} and \code{\link{pompp_fit-class}}.
 #' @examples
-#' # This code is replicated from the vignette.
 #' \dontrun{
 #' beta <- c(-1, 2) # Intercept = -1. Only one covariate
 #' delta <- c(3, 4) # Intercept = 3. Only one covariate
@@ -67,7 +66,7 @@ NULL
 #'
 #' jointPrior <- prior(
 #'   NormalPrior(rep(0, 2), 10 * diag(2)), # Beta
-#' NormalPrior(rep(0, 2), 10 * diag(2)), # Delta
+#' NormalPrior(rep(0, 3), 10 * diag(3)), # Delta
 #' GammaPrior(0.00001, 0.00001), # LambdaStar
 #' NormalPrior(0, 100), GammaPrior(0.001, 0.001) # Marks
 #' )
@@ -80,17 +79,12 @@ NULL
 #'
 #' bkg <- cbind(Z2, W2, reg_grid) # Create background
 #'
+#' # Be prepared to wait a long time for this
 #' fit <- fit_pompp(model, bkg, area = 1, mcmc_setup = list(burnin = 1000, iter = 2000))
 #'
 #' summary(fit)
 #'
-#' # Rhat upper CI values are above 1.1. More iterations are needed, so...
-#'
-#' fit2 <- fit_pompp(fit, bkg, mcmc_setup = list(iter = 10000))
-#'
-#' summary(fit2)
-#' mcmc_trace(fit2)
-#' mcmc_dens(fit2)
+#' # Rhat upper CI values are above 1.1. More iterations are needed...
 #' }
 #' @importFrom coda mcmc mcmc.list
 #' @export
@@ -150,10 +144,12 @@ methods::setMethod("fit_pompp",
                        deltanames <- c("(Observability intercept)",
                                        s("oSelectedColumns"))
                      else deltanames = paste0("delta_", 1:nd - 1)
-                     parnames <- c(betanames,deltanames,
+                     deltanames <- c(deltanames, "gamma")
+                     parnames <- c(betanames, deltanames,
                                    "lambdaStar", "marksMean", "marksNugget",
                                    "n_U", "n_Xprime", "sumLatentMarks",
-                                   "varianceLatentMarks"
+                                   "varianceLatentMarks",
+                                   "allMarksSum", "allMarksVariance"
 #                                   ,"log_Posterior" # Not working yet.
                      )
 
@@ -220,8 +216,9 @@ methods::setMethod("fit_pompp",
 
                      return(methods::new("pompp_fit",
                                          fit = do.call(coda::mcmc.list, mcmcRun),
-                                         heatMap = heatMap,
+                                         # heatMap = heatMap,
                                          original = object,
+                                         neighborhoodSize = neighborhoodSize,
                                          backgroundSummary = summary(background),
                                          area = area,
                                          parnames = parnames,
@@ -229,119 +226,119 @@ methods::setMethod("fit_pompp",
                    })
 
 
-#' @rdname fit_pompp
-#' @param cores Number of cores to pass to OpenMP.
-methods::setMethod("fit_pompp", signature(object = "pompp_fit",
-                                            background = "matrix"),
-                   function(object, background, mcmc_setup = list(iter = object$mcmc_setup$iter), verbose = TRUE,
-                            cores = 1, ...){
-                     # Helper function
-                     s <- function(n) methods::slot(object, n)
-                     so <- function(n) methods::slot(s("original"), n)
-                     backConfig <- checkFormatBackground(s("original"), background)
-
-                     # Check background differences
-                     if (verbose) cat("Checking if everything's ok...")
-                     stopifnot(all.equal(s("backgroundSummary"), summary(background)),
-                               "iter" %in% names(mcmc_setup), !is.na(mcmc_setup$iter),
-                               length(mcmc_setup$iter) == 1,
-                               mcmc_setup$iter == floor(mcmc_setup$iter), mcmc_setup$iter > 0,
-                               mcmc_setup$iter >= mcmc_setup$thin,
-                               cores > 0, cores == floor(cores), length(cores) == 1,
-                               cores < parallel::detectCores())
-                     if ("thin" %in% names(mcmc_setup))
-                       stopifnot(mcmc_setup$thin == s("mcmc_setup")$thin)
-                     else
-                       mcmc_setup$thin = s("mcmc_setup")$thin
-                     if ("burnin" %in% names(mcmc_setup) && mcmc_setup$burnin > 0)
-                       warning("\nBurnin is disabled when continuing MCMC procedure.")
-                     else
-                       cat(" Everything seems ok.\n")
-
-                     # Helper parameters
-                     betaPos <- 1:length(methods::slot(
-                       methods::slot(so("prior"), "beta"), "mu"))
-                     deltaPos <- (max(betaPos) + 1):(max(betaPos) +
-                                                       length(methods::slot(
-                                                         methods::slot(so("prior"),
-                                                                       "delta"), "mu")))
-                     lambdaPos <- max(deltaPos) + 1
-                     chains <- length(s("fit"))
-                     lastPoint <- nrow(s("fit")[[1]])
-                     lastPoint <- s("fit")[[1]][lastPoint, ]
-
-                     time <- Sys.time()
-                     mcmcRun <- list()
-                     heatMap <- s("heatMap")
-                     for (c in 1:chains){
-                       if (chains > 1 && verbose) cat("Starting chain ",c,".\n",sep="")
-                       temp <- cppPOMPP(
-                         lastPoint[betaPos], # Starting at last stored point
-                         lastPoint[deltaPos], # Starting at last stored point
-                         lastPoint[lambdaPos], # Starting at last stored point
-                         paste0(so("intensityLink"), "_", # intenisty Link + prior
-                                methods::slot(
-                                  methods::slot(so("prior"), "beta"), "family")),
-                         paste0(so("observabilityLink"),"_", # observability Link + prior
-                                methods::slot(
-                                  methods::slot(so("prior"), "delta"), "family")),
-                         methods::slot( # lambdaStar prior
-                           methods::slot(
-                             so("prior"),"lambdaStar"), "family"),
-                         retrievePars(methods::slot( # beta prior parameters
-                           so("prior"),"beta")),
-                         retrievePars(methods::slot( # delta prior parameters
-                           so("prior"),"delta")),
-                         retrievePars( # lambdaStar prior parameters
-                           methods::slot(
-                             so("prior"),"lambdaStar")),
-                         ifelse(is.integer(background), # background class
-                                "int_mat", "num_mat"),
-                         background, # background data
-                         s("area"), # region area
-                         ifelse(is.integer(so("po")),
-                                "int_mat", "num_mat"), # po data class
-                         so("po"), # po data
-                         backConfig$bIS - 1, # background intensity columns
-                         backConfig$bOS - 1, # background observability colmns
-                         so("intensitySelection") - 1, # po intensity columns
-                         so("observabilitySelection") - 1, # po obserability columns
-                         0, # MCMC burn-in
-                         mcmc_setup$thin, # MCMC thin
-                         mcmc_setup$iter, # MCMC iterations
-                         cores, verbose)
-                       heatMap <- heatMap + temp$xPrimePred
-                       mcmcRun[[c]] <- do.call(cbind,
-
-                       )
-                       colnames(mcmcRun[[c]]) <- s("parnames")
-                       mcmcRun[[c]] <- coda::mcmc(mcmcRun[[c]], thin = mcmc_setup$thin)
-                       if (chains > 1) cat("Finished chain ",c,".\n\n",sep="")
-                     }
-                     if (chains > 1 && verbose) cat("Total computation time: ", format(unclass(Sys.time()-time),
-                                                                                       digits = 2), " ",
-                                                    attr(Sys.time() - time, "units"), ".\n", sep="")
-
-                     return(methods::new("pompp_fit",
-                                         fit = coda::mcmc.list(
-                                           lapply(1:chains, function(i)
-                                             coda::mcmc(rbind(s("fit")[[i]],
-                                                              mcmcRun[[i]])))
-                                         ),
-                                         heatMap = heatMap,
-                                         original = s("original"),
-                                         backgroundSummary = s("backgroundSummary"),
-                                         area = s("area"),
-                                         parnames = s("parnames"),
-                                         mcmc_setup = list(
-                                           burnin = s("mcmc_setup")$burnin,
-                                           thin = mcmc_setup$thin,
-                                           iter = s("mcmc_setup")$iter + mcmc_setup$iter
-                                         )))
-                   } )
+##' @rdname fit_pompp
+##' @param cores Number of cores to pass to OpenMP.
+# methods::setMethod("fit_pompp", signature(object = "pompp_fit",
+#                                             background = "matrix"),
+#                    function(object, background, mcmc_setup = list(iter = object$mcmc_setup$iter), verbose = TRUE,
+#                             cores = 1, ...){
+#                      # Helper function
+#                      s <- function(n) methods::slot(object, n)
+#                      so <- function(n) methods::slot(s("original"), n)
+#                      backConfig <- checkFormatBackground(s("original"), background)
+#
+#                      # Check background differences
+#                      if (verbose) cat("Checking if everything's ok...")
+#                      stopifnot(all.equal(s("backgroundSummary"), summary(background)),
+#                                "iter" %in% names(mcmc_setup), !is.na(mcmc_setup$iter),
+#                                length(mcmc_setup$iter) == 1,
+#                                mcmc_setup$iter == floor(mcmc_setup$iter), mcmc_setup$iter > 0,
+#                                mcmc_setup$iter >= mcmc_setup$thin,
+#                                cores > 0, cores == floor(cores), length(cores) == 1,
+#                                cores <= parallel::detectCores())
+#                      if ("thin" %in% names(mcmc_setup))
+#                        stopifnot(mcmc_setup$thin == s("mcmc_setup")$thin)
+#                      else
+#                        mcmc_setup$thin = s("mcmc_setup")$thin
+#                      if ("burnin" %in% names(mcmc_setup) && mcmc_setup$burnin > 0)
+#                        warning("\nBurnin is disabled when continuing MCMC procedure.")
+#                      else
+#                        cat(" Everything seems ok.\n")
+#
+#                      # Helper parameters
+#                      betaPos <- 1:length(methods::slot(
+#                        methods::slot(so("prior"), "beta"), "mu"))
+#                      deltaPos <- (max(betaPos) + 1):(max(betaPos) +
+#                                                        length(methods::slot(
+#                                                          methods::slot(so("prior"),
+#                                                                        "delta"), "mu")))
+#                      lambdaPos <- max(deltaPos) + 1
+#                      chains <- length(s("fit"))
+#                      lastPoint <- nrow(s("fit")[[1]])
+#                      lastPoint <- s("fit")[[1]][lastPoint, ]
+#
+#                      time <- Sys.time()
+#                      mcmcRun <- list()
+#                      heatMap <- s("heatMap")
+#                      for (c in 1:chains){
+#                        if (chains > 1 && verbose) cat("Starting chain ",c,".\n",sep="")
+#                        temp <- cppPOMPP(
+#                          lastPoint[betaPos], # Starting at last stored point
+#                          lastPoint[deltaPos], # Starting at last stored point
+#                          lastPoint[lambdaPos], # Starting at last stored point
+#                          paste0(so("intensityLink"), "_", # intenisty Link + prior
+#                                 methods::slot(
+#                                   methods::slot(so("prior"), "beta"), "family")),
+#                          paste0(so("observabilityLink"),"_", # observability Link + prior
+#                                 methods::slot(
+#                                   methods::slot(so("prior"), "delta"), "family")),
+#                          methods::slot( # lambdaStar prior
+#                            methods::slot(
+#                              so("prior"),"lambdaStar"), "family"),
+#                          retrievePars(methods::slot( # beta prior parameters
+#                            so("prior"),"beta")),
+#                          retrievePars(methods::slot( # delta prior parameters
+#                            so("prior"),"delta")),
+#                          retrievePars( # lambdaStar prior parameters
+#                            methods::slot(
+#                              so("prior"),"lambdaStar")),
+#                          ifelse(is.integer(background), # background class
+#                                 "int_mat", "num_mat"),
+#                          background, # background data
+#                          s("area"), # region area
+#                          ifelse(is.integer(so("po")),
+#                                 "int_mat", "num_mat"), # po data class
+#                          so("po"), # po data
+#                          backConfig$bIS - 1, # background intensity columns
+#                          backConfig$bOS - 1, # background observability colmns
+#                          so("intensitySelection") - 1, # po intensity columns
+#                          so("observabilitySelection") - 1, # po obserability columns
+#                          0, # MCMC burn-in
+#                          mcmc_setup$thin, # MCMC thin
+#                          mcmc_setup$iter, # MCMC iterations
+#                          cores, verbose)
+#                        heatMap <- heatMap + temp$xPrimePred
+#                        mcmcRun[[c]] <- do.call(cbind,
+#
+#                        )
+#                        colnames(mcmcRun[[c]]) <- s("parnames")
+#                        mcmcRun[[c]] <- coda::mcmc(mcmcRun[[c]], thin = mcmc_setup$thin)
+#                        if (chains > 1) cat("Finished chain ",c,".\n\n",sep="")
+#                      }
+#                      if (chains > 1 && verbose) cat("Total computation time: ", format(unclass(Sys.time()-time),
+#                                                                                        digits = 2), " ",
+#                                                     attr(Sys.time() - time, "units"), ".\n", sep="")
+#
+#                      return(methods::new("pompp_fit",
+#                                          fit = coda::mcmc.list(
+#                                            lapply(1:chains, function(i)
+#                                              coda::mcmc(rbind(s("fit")[[i]],
+#                                                               mcmcRun[[i]])))
+#                                          ),
+#                                          heatMap = heatMap,
+#                                          original = s("original"),
+#                                          backgroundSummary = s("backgroundSummary"),
+#                                          area = s("area"),
+#                                          parnames = s("parnames"),
+#                                          mcmc_setup = list(
+#                                            burnin = s("mcmc_setup")$burnin,
+#                                            thin = mcmc_setup$thin,
+#                                            iter = s("mcmc_setup")$iter + mcmc_setup$iter
+#                                          )))
+#                    } )
 
 # Auxiliary function
-checkFormatBackground <- function(object,background){
+checkFormatBackground <- function(object, background){
   # Helper function
   s <- function(n) methods::slot(object, n)
 

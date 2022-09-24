@@ -109,7 +109,9 @@ methods::setMethod("show","NormalPrior",function(object){
   print(methods::slot(object, "mu"))
   s = methods::slot(object, "Sigma")
   cat("Sigma covariance matrix:\n")
-  if (max(s - diag(diag(s)))) # If Sigma is not a diagonal matrix
+  if (length(s) == 1)
+    print(s)
+  else if (max(s - diag(diag(s)))) # If Sigma is not a diagonal matrix
     print(methods::slot(object, "Sigma"))
   else if (min(diag(s)) != max(diag(s))) # If Sigma is a diagonal matrix of different values
     cat("diag(c(", paste(diag(s), collapse = ","), "))\n", sep="")

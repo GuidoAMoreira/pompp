@@ -28,6 +28,7 @@ NULL
 methods::setClass("pompp_fit",
                   representation(fit = "mcmc.list",
                                  original = "pompp_model",
+                                 neighborhoodSize = "numeric",
                                  backgroundSummary = "table",
                                  area = "numeric",
                                  parnames = "character",
@@ -139,8 +140,8 @@ methods::setMethod("summary", "pompp_fit", function(object,...) summary.pompp_fi
 summary.pompp_fit <- function(object, ...){
   chains <- length(methods::slot(methods::slot(object, "original"), "init"))
   nb <- length(methods::slot(methods::slot(object, "original"), "intensitySelection")) + 1
-  nd <- length(methods::slot(methods::slot(object, "original"), "observabilitySelection")) + 1
-  npar <- nb + nd + 5 # +1 = lambdaStar + marksMu + marksTau2 + marksSum + marksVariance
+  nd <- length(methods::slot(methods::slot(object, "original"), "observabilitySelection")) + 2
+  npar <- nb + nd + 7 # +1 = lambdaStar + marksMu + marksTau2 + nU + nX' + marksSum + marksVariance
   result <- matrix(0, npar, 6) # Mean, median, sd, lower CI bound, upper CI bound, effective sample size
   colnames(result) <- c("mean", "median", "sd", "2.5%", "97.5%", "eff. sample size")
   rownames(result) <- methods::slot(object, "parnames")[1:npar]
@@ -193,8 +194,8 @@ methods::setMethod("[[", "pompp_fit", function(x, i){
   s <- function(n) methods::slot(x, n)
 
   nb <- length(methods::slot(s("original"), "intensitySelection")) + 1
-  nd <- length(methods::slot(s("original"), "observabilitySelection")) + 1
-  npar <- nb + nd + 5 # +1 from lambdaStar + marksMu + marksTau2 + marksSum + marksVariance
+  nd <- length(methods::slot(s("original"), "observabilitySelection")) + 2
+  npar <- nb + nd + 7 # +1 from lambdaStar + marksMu + marksTau2 + nU + nX' + marksSum + marksVariance
 
   if (i == "parameters"){
     summ <- summary(x)
@@ -206,14 +207,14 @@ methods::setMethod("[[", "pompp_fit", function(x, i){
       names(data) <- namesAid(names(data))
       obsInterceptName <- names(data)[nb + 1]
 
-      intensity <- t(apply(
+      intensity <- as.matrix(t(rbind(rep(1, nrow(data)), apply(
         data[2:(which(names(data) == obsInterceptName) - 1)], 1,
         function(chain) {c2 <- chain * chain; c2 / sum(c2)}
-      ))
-      observability <- t(apply(
+      )))[, -1])
+      observability <- as.matrix(t(rbind(rep(1, nrow(data)), apply(
         data[(which(names(data) == obsInterceptName) + 1):(which(names(data) == "lambdaStar") - 1)], 1,
         function(chain) {c2 <- chain * chain; c2 / sum(c2)}
-      ))
+      )))[, -1])
       colnames(intensity) <- names(data)[2:(which(names(data) == obsInterceptName) - 1)]
       colnames(observability) <- names(data)[(which(names(data) == obsInterceptName) + 1):(which(names(data) == "lambdaStar") - 1)]
       output <- list(intensity = intensity, observability = observability)
@@ -294,17 +295,18 @@ namesAid <- function(string){
 as.array.pompp_fit <- function(x, ...){
   nchains <- length(methods::slot(x, "fit"))
   chains <- do.call(rbind, methods::slot(x, "fit"))
-  chains <- chains[, -((ncol(chains) - 2):ncol(chains))]
+  chains <- chains[, -((ncol(chains) - 1):ncol(chains))]
   iterations <- nrow(methods::slot(x, "fit")[[1]])
   npar <- ncol(chains)
 
   ## Format to be used with bayesplot:: functions
+  parnames <- methods::slot(x, "parnames")
   return(
     array(chains,
           dim = c(iterations, nchains, npar),
           dimnames = list(iterations = NULL,
                           chains = paste0("chain:", 1:nchains),
-                          parameters = namesAid(methods::slot(x, "parnames"))))
+                          parameters = namesAid(parnames[1:(length(parnames) - 2)])))
   )
 }
 
@@ -329,7 +331,7 @@ methods::setMethod("as.matrix", "pompp_fit", function(x, ...) as.matrix.pompp_fi
 as.matrix.pompp_fit <- function(x, ...){
   nchains <- length(methods::slot(x, "fit"))
   chains <- do.call(rbind, methods::slot(x, "fit"))
-  chains <- chains[, -((ncol(chains) - 2):ncol(chains))]
+  chains <- chains[, -((ncol(chains) - 1):ncol(chains))]
   iterations <- nrow(methods::slot(x, "fit")[[1]])
   parnames <- namesAid(colnames(chains))
   chains <- cbind(chains, rep(factor(1:nchains), each = iterations))
@@ -369,7 +371,7 @@ methods::setMethod("as.data.frame","pompp_fit",function(x, row.names = NULL, opt
 as.data.frame.pompp_fit = function(x, row.names = NULL, optional = FALSE, ...){
   nchains <- length(methods::slot(x, "fit"))
   chains <- do.call(rbind, methods::slot(x, "fit"))
-  chains <- chains[, -((ncol(chains) - 2):ncol(chains))]
+  chains <- chains[, -((ncol(chains) - 1):ncol(chains))]
   parnames <- namesAid(colnames(chains))
   iterations <- nrow(methods::slot(x, "fit")[[1]])
 

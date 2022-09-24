@@ -3,7 +3,7 @@
 \name{fit_pompp}
 \alias{fit_pompp}
 \alias{fit_pompp,pompp_model,matrix-method}
-\alias{fit_pompp,pompp_fit,matrix-method}
+\alias{checkFormatBackground}
 \title{Fit presence-only data using the Presence-Only for Marked Point Process model}
 \usage{
 fit_pompp(
@@ -25,14 +25,7 @@ fit_pompp(
   ...
 )
 
-\S4method{fit_pompp}{pompp_fit,matrix}(
-  object,
-  background,
-  mcmc_setup = list(iter = object$mcmc_setup$iter),
-  verbose = TRUE,
-  cores = 1,
-  ...
-)
+checkFormatBackground(object, background)
 }
 \arguments{
 \item{object}{Either a \code{pompp_model} or \code{pompp_fit} object. If
@@ -70,7 +63,6 @@ on the likelihood function.
 The background is kept outside of the
 }
 \examples{
-# This code is replicated from the vignette.
 \dontrun{
 beta <- c(-1, 2) # Intercept = -1. Only one covariate
 delta <- c(3, 4) # Intercept = 3. Only one covariate
@@ -115,7 +107,7 @@ po_marks <- marks[po_sightings]
 
 jointPrior <- prior(
   NormalPrior(rep(0, 2), 10 * diag(2)), # Beta
-NormalPrior(rep(0, 2), 10 * diag(2)), # Delta
+NormalPrior(rep(0, 3), 10 * diag(3)), # Delta
 GammaPrior(0.00001, 0.00001), # LambdaStar
 NormalPrior(0, 100), GammaPrior(0.001, 0.001) # Marks
 )
@@ -128,17 +120,12 @@ intensitySelection = 1, observabilitySelection = 2, marksSelection = 5,
 
 bkg <- cbind(Z2, W2, reg_grid) # Create background
 
+# Be prepared to wait a long time for this
 fit <- fit_pompp(model, bkg, area = 1, mcmc_setup = list(burnin = 1000, iter = 2000))
 
 summary(fit)
 
-# Rhat upper CI values are above 1.1. More iterations are needed, so...
-
-fit2 <- fit_pompp(fit, bkg, mcmc_setup = list(iter = 10000))
-
-summary(fit2)
-mcmc_trace(fit2)
-mcmc_dens(fit2)
+# Rhat upper CI values are above 1.1. More iterations are needed...
 }
 }
 \seealso{
