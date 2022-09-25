@@ -43,11 +43,11 @@ public:
   virtual void closeUp();
 protected:
   const int xSize; // Used in start up and close up
-  Eigen::VectorXd values;
   int tempAcc; // Used in start up and close up
   int parameterSize, currentIndex;
   Eigen::MatrixXd positions, covariances, augmentedPositions, augmentedCovariances;
   Eigen::VectorXd augmentedValues;
+  Eigen::VectorXd values;
   CovarianceFunction* covFun;
   double logDensity;
 

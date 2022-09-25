@@ -13,9 +13,9 @@ public:
 };
 
 class NormalPrior : public RegressionPrior {
+  const Eigen::VectorXd priorMean;
   const Eigen::MatrixXd priorCovariance;
   Eigen::MatrixXd priorPrecision;
-  const Eigen::VectorXd priorMean;
   Eigen::VectorXd precisionTimesMean;
   Eigen::LLT<Eigen::MatrixXd> sigmaSolver;
 

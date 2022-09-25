@@ -71,10 +71,12 @@ public:
   Eigen::VectorXd getGP(int type) {
     if (type == INTENSITY_VARIABLES) return spatialProcessInt->getAugmentedValuesTail();
     if (type == OBSERVABILITY_VARIABLES) return spatialProcessObs->getAugmentedValuesTail();
+    return Eigen::VectorXd(0);
   }
   Eigen::VectorXd getGPfull(int type) {
     if (type == INTENSITY_VARIABLES) return spatialProcessInt->getAugmentedValues();
     if (type == OBSERVABILITY_VARIABLES) return spatialProcessObs->getAugmentedValues();
+    return Eigen::VectorXd(0);
   }
   // Setters
   void setGP(GaussianProcess* gp, int type) {
