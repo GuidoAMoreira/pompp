@@ -22,7 +22,7 @@ NULL
 #' @details The background is kept outside of the
 #' @seealso \code{\link{pompp_model}} and \code{\link{pompp_fit-class}}.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' beta <- c(-1, 2) # Intercept = -1. Only one covariate
 #' delta <- c(3, 4) # Intercept = 3. Only one covariate
 #' lambdaStar <- 1000
@@ -81,7 +81,7 @@ NULL
 #'
 #' # Be prepared to wait a long time for this
 #' fit <- fit_pompp(model, bkg, neighborhoodSize = 20, area = 1,
-#'   mcmc_setup = list(burnin = 1000, iter = 2000))
+#'   mcmc_setup = list(burnin = 1000, iter = 2000), cores = 1)
 #'
 #' summary(fit)
 #'
