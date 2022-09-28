@@ -11,14 +11,11 @@ class MarkovChain {
   unsigned int iteration;
 //  MCMCprogress* progressBar;
 
-  // States
-  std::vector<long> discreteStates;
-  std::vector<double> continuousStates;
-
+  virtual double applyTransitionKernel() = 0; // returns log posterior
 public:
 //  MarkovChain() : iteration(0), progressBar(new MCMCprogress()) {}
   MarkovChain() : iteration(0) {}
-  virtual ~MarkovChain() {}
+  virtual ~MarkovChain();
 
   // Update the chain
   void update() {
@@ -35,9 +32,6 @@ public:
   // Getters
   double getLogPosterior() {return logPosterior;}
   unsigned int getIteration() {return iteration;}
-
-protected:
-  virtual double applyTransitionKernel() = 0; // returns log posterior
 };
 
 #endif

@@ -33,6 +33,12 @@
         "hidden": false
     },
     {
+        "file": "/Users/anthorg/Documents/pompp/src/MarkovChainp.cpp",
+        "file_last_write": 1664383317.0,
+        "definitions": [],
+        "hidden": false
+    },
+    {
         "file": "/Users/anthorg/Documents/pompp/src/PolyaGammaSampler.c",
         "file_last_write": 1653491153.0,
         "definitions": [
@@ -52,48 +58,7 @@
     {
         "file": "/Users/anthorg/Documents/pompp/src/PresenceOnly.cpp",
         "file_last_write": 1664381264.0,
-        "definitions": [
-            {
-                "usr": "c:@S@PresenceOnly@F@updateLambdaStar#",
-                "kind": 7,
-                "parent_name": "PresenceOnly",
-                "name": "updateLambdaStar",
-                "file": "/Users/anthorg/Documents/pompp/src/PresenceOnly.cpp",
-                "line": 11,
-                "column": 22,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@PresenceOnly@F@sampleProcesses#",
-                "kind": 7,
-                "parent_name": "PresenceOnly",
-                "name": "sampleProcesses",
-                "file": "/Users/anthorg/Documents/pompp/src/PresenceOnly.cpp",
-                "line": 19,
-                "column": 22,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@PresenceOnly@F@updateMarksPars#&1$@N@Eigen@S@Matrix>#d#VI-1#VI1#VI0#VI-1#VI1#",
-                "kind": 7,
-                "parent_name": "PresenceOnly",
-                "name": "updateMarksPars(const Eigen::VectorXd &)",
-                "file": "/Users/anthorg/Documents/pompp/src/PresenceOnly.cpp",
-                "line": 93,
-                "column": 22,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@PresenceOnly@F@applyTransitionKernel#",
-                "kind": 7,
-                "parent_name": "PresenceOnly",
-                "name": "applyTransitionKernel",
-                "file": "/Users/anthorg/Documents/pompp/src/PresenceOnly.cpp",
-                "line": 114,
-                "column": 29,
-                "hidden": false
-            }
-        ],
+        "definitions": [],
         "hidden": false
     },
     {
@@ -488,59 +453,8 @@
     },
     {
         "file": "/Users/anthorg/Documents/pompp/src/include/MarkovChain.hpp",
-        "file_last_write": 1653491153.0,
-        "definitions": [
-            {
-                "usr": "c:@S@MarkovChain",
-                "kind": 2,
-                "parent_name": "",
-                "name": "MarkovChain",
-                "file": "/Users/anthorg/Documents/pompp/src/include/MarkovChain.hpp",
-                "line": 9,
-                "column": 7,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@MarkovChain@F@update#",
-                "kind": 7,
-                "parent_name": "MarkovChain",
-                "name": "update",
-                "file": "/Users/anthorg/Documents/pompp/src/include/MarkovChain.hpp",
-                "line": 24,
-                "column": 8,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@MarkovChain@F@update#i#",
-                "kind": 7,
-                "parent_name": "MarkovChain",
-                "name": "update(unsigned int)",
-                "file": "/Users/anthorg/Documents/pompp/src/include/MarkovChain.hpp",
-                "line": 31,
-                "column": 8,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@MarkovChain@F@getLogPosterior#",
-                "kind": 7,
-                "parent_name": "MarkovChain",
-                "name": "getLogPosterior",
-                "file": "/Users/anthorg/Documents/pompp/src/include/MarkovChain.hpp",
-                "line": 36,
-                "column": 10,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@MarkovChain@F@getIteration#",
-                "kind": 7,
-                "parent_name": "MarkovChain",
-                "name": "getIteration",
-                "file": "/Users/anthorg/Documents/pompp/src/include/MarkovChain.hpp",
-                "line": 37,
-                "column": 16,
-                "hidden": false
-            }
-        ],
+        "file_last_write": 1664383438.0,
+        "definitions": [],
         "hidden": false
     },
     {
@@ -582,119 +496,8 @@
     },
     {
         "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
-        "file_last_write": 1656872070.0,
-        "definitions": [
-            {
-                "usr": "c:@S@PresenceOnly",
-                "kind": 2,
-                "parent_name": "",
-                "name": "PresenceOnly",
-                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
-                "line": 11,
-                "column": 7,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@PresenceOnly@F@getBeta#",
-                "kind": 7,
-                "parent_name": "PresenceOnly",
-                "name": "getBeta",
-                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
-                "line": 72,
-                "column": 19,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@PresenceOnly@F@getDelta#",
-                "kind": 7,
-                "parent_name": "PresenceOnly",
-                "name": "getDelta",
-                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
-                "line": 73,
-                "column": 19,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@PresenceOnly@F@getLambdaStar#",
-                "kind": 7,
-                "parent_name": "PresenceOnly",
-                "name": "getLambdaStar",
-                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
-                "line": 74,
-                "column": 10,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@PresenceOnly@F@getU#",
-                "kind": 7,
-                "parent_name": "PresenceOnly",
-                "name": "getU",
-                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
-                "line": 75,
-                "column": 19,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@PresenceOnly@F@getXprime#",
-                "kind": 7,
-                "parent_name": "PresenceOnly",
-                "name": "getXprime",
-                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
-                "line": 76,
-                "column": 19,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@PresenceOnly@F@getUsize#",
-                "kind": 7,
-                "parent_name": "PresenceOnly",
-                "name": "getUsize",
-                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
-                "line": 77,
-                "column": 7,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@PresenceOnly@F@getXpsize#",
-                "kind": 7,
-                "parent_name": "PresenceOnly",
-                "name": "getXpsize",
-                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
-                "line": 78,
-                "column": 7,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@PresenceOnly@F@getMarksPrime#",
-                "kind": 7,
-                "parent_name": "PresenceOnly",
-                "name": "getMarksPrime",
-                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
-                "line": 79,
-                "column": 19,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@PresenceOnly@F@getMarksMu#",
-                "kind": 7,
-                "parent_name": "PresenceOnly",
-                "name": "getMarksMu",
-                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
-                "line": 80,
-                "column": 10,
-                "hidden": false
-            },
-            {
-                "usr": "c:@S@PresenceOnly@F@getMarksNugget#",
-                "kind": 7,
-                "parent_name": "PresenceOnly",
-                "name": "getMarksNugget",
-                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
-                "line": 81,
-                "column": 10,
-                "hidden": false
-            }
-        ],
+        "file_last_write": 1664380710.0,
+        "definitions": [],
         "hidden": false
     },
     {
