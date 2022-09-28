@@ -6,8 +6,6 @@
 #include "BackgroundVariables.hpp"
 #include "RegressionPrior.hpp"
 
-#define MAX_ATTEMPTS_GP 1000
-
 class PresenceOnly : public MarkovChain {
   // States
   // Regression members
