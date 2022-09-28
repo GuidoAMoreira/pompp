@@ -1,0 +1,780 @@
+[
+    {
+        "file": "/Users/anthorg/Documents/pompp/src/BinaryRegression.cpp",
+        "file_last_write": 1656872070.0,
+        "definitions": [
+            {
+                "usr": "c:@S@LogisticRegression@F@sample#&1$@N@Eigen@S@Matrix>#d#VI-1#VI-1#VI0#VI-1#VI-1#S0_#",
+                "kind": 7,
+                "parent_name": "LogisticRegression",
+                "name": "sample(const Eigen::MatrixXd &, const Eigen::MatrixXd &)",
+                "file": "/Users/anthorg/Documents/pompp/src/BinaryRegression.cpp",
+                "line": 13,
+                "column": 28,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@LogisticRegression@F@link#&1$@N@Eigen@S@Matrix>#d#VI-1#VI-1#VI0#VI-1#VI-1#&1$@N@Eigen@S@Matrix>#d#VI-1#VI1#VI0#VI-1#VI1#b#",
+                "kind": 7,
+                "parent_name": "LogisticRegression",
+                "name": "link(const Eigen::MatrixXd &, const Eigen::VectorXd &, bool)",
+                "file": "/Users/anthorg/Documents/pompp/src/BinaryRegression.cpp",
+                "line": 70,
+                "column": 44,
+                "hidden": false
+            }
+        ],
+        "hidden": false
+    },
+    {
+        "file": "/Users/anthorg/Documents/pompp/src/GaussianProcess.cpp",
+        "file_last_write": 1664379950.0,
+        "definitions": [],
+        "hidden": false
+    },
+    {
+        "file": "/Users/anthorg/Documents/pompp/src/PolyaGammaSampler.c",
+        "file_last_write": 1653491153.0,
+        "definitions": [
+            {
+                "usr": "c:@F@draw_from_PolyaGamma#d#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "draw_from_PolyaGamma(double)",
+                "file": "/Users/anthorg/Documents/pompp/src/PolyaGammaSampler.c",
+                "line": 7,
+                "column": 8,
+                "hidden": false
+            }
+        ],
+        "hidden": false
+    },
+    {
+        "file": "/Users/anthorg/Documents/pompp/src/PresenceOnly.cpp",
+        "file_last_write": 1664381264.0,
+        "definitions": [
+            {
+                "usr": "c:@S@PresenceOnly@F@updateLambdaStar#",
+                "kind": 7,
+                "parent_name": "PresenceOnly",
+                "name": "updateLambdaStar",
+                "file": "/Users/anthorg/Documents/pompp/src/PresenceOnly.cpp",
+                "line": 11,
+                "column": 22,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PresenceOnly@F@sampleProcesses#",
+                "kind": 7,
+                "parent_name": "PresenceOnly",
+                "name": "sampleProcesses",
+                "file": "/Users/anthorg/Documents/pompp/src/PresenceOnly.cpp",
+                "line": 19,
+                "column": 22,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PresenceOnly@F@updateMarksPars#&1$@N@Eigen@S@Matrix>#d#VI-1#VI1#VI0#VI-1#VI1#",
+                "kind": 7,
+                "parent_name": "PresenceOnly",
+                "name": "updateMarksPars(const Eigen::VectorXd &)",
+                "file": "/Users/anthorg/Documents/pompp/src/PresenceOnly.cpp",
+                "line": 93,
+                "column": 22,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PresenceOnly@F@applyTransitionKernel#",
+                "kind": 7,
+                "parent_name": "PresenceOnly",
+                "name": "applyTransitionKernel",
+                "file": "/Users/anthorg/Documents/pompp/src/PresenceOnly.cpp",
+                "line": 114,
+                "column": 29,
+                "hidden": false
+            }
+        ],
+        "hidden": false
+    },
+    {
+        "file": "/Users/anthorg/Documents/pompp/src/RegressionPrior.cpp",
+        "file_last_write": 1656872070.0,
+        "definitions": [
+            {
+                "usr": "c:@S@NormalPrior@F@sample#&1$@N@Eigen@S@Matrix>#d#VI-1#VI1#VI0#VI-1#VI1#&1$@N@Eigen@S@Matrix>#d#VI-1#VI-1#VI0#VI-1#VI-1#",
+                "kind": 7,
+                "parent_name": "NormalPrior",
+                "name": "sample(const Eigen::VectorXd &, const Eigen::MatrixXd &)",
+                "file": "/Users/anthorg/Documents/pompp/src/RegressionPrior.cpp",
+                "line": 8,
+                "column": 30,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@NormalPrior@F@logPrior#&1$@N@Eigen@S@Matrix>#d#VI-1#VI1#VI0#VI-1#VI1#",
+                "kind": 7,
+                "parent_name": "NormalPrior",
+                "name": "logPrior(const Eigen::VectorXd &)",
+                "file": "/Users/anthorg/Documents/pompp/src/RegressionPrior.cpp",
+                "line": 16,
+                "column": 28,
+                "hidden": false
+            }
+        ],
+        "hidden": false
+    },
+    {
+        "file": "/Users/anthorg/Documents/pompp/src/include/BackgroundVariables.hpp",
+        "file_last_write": 1664084531.0,
+        "definitions": [],
+        "hidden": false
+    },
+    {
+        "file": "/Users/anthorg/Documents/pompp/src/include/BinaryRegression.hpp",
+        "file_last_write": 1656872070.0,
+        "definitions": [
+            {
+                "usr": "c:@S@BinaryRegression",
+                "kind": 2,
+                "parent_name": "",
+                "name": "BinaryRegression",
+                "file": "/Users/anthorg/Documents/pompp/src/include/BinaryRegression.hpp",
+                "line": 7,
+                "column": 7,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@BinaryRegression@F@link#&1$@N@Eigen@S@Matrix>#d#VI-1#VI-1#VI0#VI-1#VI-1#b#",
+                "kind": 7,
+                "parent_name": "BinaryRegression",
+                "name": "link(const Eigen::MatrixXd &, bool)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/BinaryRegression.hpp",
+                "line": 21,
+                "column": 19,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@BinaryRegression@F@setPrior#*$@S@RegressionPrior#",
+                "kind": 7,
+                "parent_name": "BinaryRegression",
+                "name": "setPrior(RegressionPrior *)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/BinaryRegression.hpp",
+                "line": 39,
+                "column": 8,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@BinaryRegression@F@getBeta#",
+                "kind": 7,
+                "parent_name": "BinaryRegression",
+                "name": "getBeta",
+                "file": "/Users/anthorg/Documents/pompp/src/include/BinaryRegression.hpp",
+                "line": 42,
+                "column": 19,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@BinaryRegression@F@getSize#",
+                "kind": 7,
+                "parent_name": "BinaryRegression",
+                "name": "getSize",
+                "file": "/Users/anthorg/Documents/pompp/src/include/BinaryRegression.hpp",
+                "line": 43,
+                "column": 7,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@BinaryRegression@F@getNormalMean#",
+                "kind": 7,
+                "parent_name": "BinaryRegression",
+                "name": "getNormalMean",
+                "file": "/Users/anthorg/Documents/pompp/src/include/BinaryRegression.hpp",
+                "line": 44,
+                "column": 19,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@BinaryRegression@F@setNormalMean#$@N@Eigen@S@Matrix>#d#VI-1#VI1#VI0#VI-1#VI1#",
+                "kind": 7,
+                "parent_name": "BinaryRegression",
+                "name": "setNormalMean(Eigen::VectorXd)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/BinaryRegression.hpp",
+                "line": 47,
+                "column": 8,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@BinaryRegression@F@setBeta#$@N@Eigen@S@Matrix>#d#VI-1#VI1#VI0#VI-1#VI1#",
+                "kind": 7,
+                "parent_name": "BinaryRegression",
+                "name": "setBeta(Eigen::VectorXd)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/BinaryRegression.hpp",
+                "line": 48,
+                "column": 8,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@LogisticRegression",
+                "kind": 2,
+                "parent_name": "",
+                "name": "LogisticRegression",
+                "file": "/Users/anthorg/Documents/pompp/src/include/BinaryRegression.hpp",
+                "line": 51,
+                "column": 7,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@LogisticRegression@F@getDataAugmentation#",
+                "kind": 7,
+                "parent_name": "LogisticRegression",
+                "name": "getDataAugmentation",
+                "file": "/Users/anthorg/Documents/pompp/src/include/BinaryRegression.hpp",
+                "line": 55,
+                "column": 19,
+                "hidden": false
+            }
+        ],
+        "hidden": false
+    },
+    {
+        "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+        "file_last_write": 1657115847.0,
+        "definitions": [
+            {
+                "usr": "c:@S@CovarianceFunction",
+                "kind": 2,
+                "parent_name": "",
+                "name": "CovarianceFunction",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 9,
+                "column": 7,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@CovarianceFunction@F@getLogDensity#",
+                "kind": 7,
+                "parent_name": "CovarianceFunction",
+                "name": "getLogDensity",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 18,
+                "column": 10,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@CovarianceFunction@F@getSigma2#",
+                "kind": 7,
+                "parent_name": "CovarianceFunction",
+                "name": "getSigma2",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 20,
+                "column": 10,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@CovarianceFunction@F@setLogDensity#d#",
+                "kind": 7,
+                "parent_name": "CovarianceFunction",
+                "name": "setLogDensity(double)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 23,
+                "column": 8,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@CovarianceFunction@F@calcRange#$@N@Eigen@S@Matrix>#d#VI-1#VI1#VI0#VI-1#VI1#",
+                "kind": 7,
+                "parent_name": "CovarianceFunction",
+                "name": "calcRange(Eigen::VectorXd)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 29,
+                "column": 10,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PowerExponentialCovariance",
+                "kind": 2,
+                "parent_name": "",
+                "name": "PowerExponentialCovariance",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 35,
+                "column": 7,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PowerExponentialCovariance@F@getPar#I#",
+                "kind": 7,
+                "parent_name": "PowerExponentialCovariance",
+                "name": "getPar(int)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 45,
+                "column": 10,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PowerExponentialCovariance@F@getParSize#",
+                "kind": 7,
+                "parent_name": "PowerExponentialCovariance",
+                "name": "getParSize",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 46,
+                "column": 7,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PowerExponentialCovariance@F@setPar#d#I#",
+                "kind": 7,
+                "parent_name": "PowerExponentialCovariance",
+                "name": "setPar(double, int)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 48,
+                "column": 8,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PowerExponentialCovariance@F@operator()#d#$@N@Eigen@S@Matrix>#d#VI-1#VI1#VI0#VI-1#VI1#",
+                "kind": 7,
+                "parent_name": "PowerExponentialCovariance",
+                "name": "operator(double, Eigen::VectorXd)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 50,
+                "column": 10,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PowerExponentialCovariance@F@operator()#d#",
+                "kind": 7,
+                "parent_name": "PowerExponentialCovariance",
+                "name": "operator(double)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 52,
+                "column": 10,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PowerExponentialCovariance@F@calcRange#d#$@N@Eigen@S@Matrix>#d#VI-1#VI1#VI0#VI-1#VI1#",
+                "kind": 7,
+                "parent_name": "PowerExponentialCovariance",
+                "name": "calcRange(double, Eigen::VectorXd)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 54,
+                "column": 10,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PowerExponentialCovariance@F@calcRange#d#",
+                "kind": 7,
+                "parent_name": "PowerExponentialCovariance",
+                "name": "calcRange(double)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 56,
+                "column": 10,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@MaternCovariance",
+                "kind": 2,
+                "parent_name": "",
+                "name": "MaternCovariance",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 60,
+                "column": 7,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@MaternCovariance@F@updateConstant#",
+                "kind": 7,
+                "parent_name": "MaternCovariance",
+                "name": "updateConstant",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 62,
+                "column": 8,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@MaternCovariance@F@getpar#I#",
+                "kind": 7,
+                "parent_name": "MaternCovariance",
+                "name": "getpar(int)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 68,
+                "column": 10,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@MaternCovariance@F@getParSize#",
+                "kind": 7,
+                "parent_name": "MaternCovariance",
+                "name": "getParSize",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 69,
+                "column": 7,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@MaternCovariance@F@setPar#d#I#",
+                "kind": 7,
+                "parent_name": "MaternCovariance",
+                "name": "setPar(double, int)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 71,
+                "column": 8,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@MaternCovariance@F@operator()#d#$@N@Eigen@S@Matrix>#d#VI-1#VI1#VI0#VI-1#VI1#",
+                "kind": 7,
+                "parent_name": "MaternCovariance",
+                "name": "operator(double, Eigen::VectorXd)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 73,
+                "column": 10,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@MaternCovariance@F@operator()#d#",
+                "kind": 7,
+                "parent_name": "MaternCovariance",
+                "name": "operator(double)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 76,
+                "column": 10,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@MaternCovariance@F@calcRange#d#$@N@Eigen@S@Matrix>#d#VI-1#VI1#VI0#VI-1#VI1#",
+                "kind": 7,
+                "parent_name": "MaternCovariance",
+                "name": "calcRange(double, Eigen::VectorXd)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 78,
+                "column": 10,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@MaternCovariance@F@calcRange#d#",
+                "kind": 7,
+                "parent_name": "MaternCovariance",
+                "name": "calcRange(double)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/CovarianceFunction.hpp",
+                "line": 80,
+                "column": 10,
+                "hidden": false
+            }
+        ],
+        "hidden": false
+    },
+    {
+        "file": "/Users/anthorg/Documents/pompp/src/include/GaussianProcess.hpp",
+        "file_last_write": 1664084487.0,
+        "definitions": [],
+        "hidden": false
+    },
+    {
+        "file": "/Users/anthorg/Documents/pompp/src/include/MCMCprogress.hpp",
+        "file_last_write": 1640527269.0,
+        "definitions": [
+            {
+                "usr": "c:@S@MCMCprogress",
+                "kind": 2,
+                "parent_name": "",
+                "name": "MCMCprogress",
+                "file": "/Users/anthorg/Documents/pompp/src/include/MCMCprogress.hpp",
+                "line": 6,
+                "column": 7,
+                "hidden": false
+            }
+        ],
+        "hidden": false
+    },
+    {
+        "file": "/Users/anthorg/Documents/pompp/src/include/MarkovChain.hpp",
+        "file_last_write": 1653491153.0,
+        "definitions": [
+            {
+                "usr": "c:@S@MarkovChain",
+                "kind": 2,
+                "parent_name": "",
+                "name": "MarkovChain",
+                "file": "/Users/anthorg/Documents/pompp/src/include/MarkovChain.hpp",
+                "line": 9,
+                "column": 7,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@MarkovChain@F@update#",
+                "kind": 7,
+                "parent_name": "MarkovChain",
+                "name": "update",
+                "file": "/Users/anthorg/Documents/pompp/src/include/MarkovChain.hpp",
+                "line": 24,
+                "column": 8,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@MarkovChain@F@update#i#",
+                "kind": 7,
+                "parent_name": "MarkovChain",
+                "name": "update(unsigned int)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/MarkovChain.hpp",
+                "line": 31,
+                "column": 8,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@MarkovChain@F@getLogPosterior#",
+                "kind": 7,
+                "parent_name": "MarkovChain",
+                "name": "getLogPosterior",
+                "file": "/Users/anthorg/Documents/pompp/src/include/MarkovChain.hpp",
+                "line": 36,
+                "column": 10,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@MarkovChain@F@getIteration#",
+                "kind": 7,
+                "parent_name": "MarkovChain",
+                "name": "getIteration",
+                "file": "/Users/anthorg/Documents/pompp/src/include/MarkovChain.hpp",
+                "line": 37,
+                "column": 16,
+                "hidden": false
+            }
+        ],
+        "hidden": false
+    },
+    {
+        "file": "/Users/anthorg/Documents/pompp/src/include/PolyaGammaSampler.h",
+        "file_last_write": 1656872070.0,
+        "definitions": [
+            {
+                "usr": "c:PolyaGammaSampler.h@F@mass_texpon#d#d#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "mass_texpon(double, double)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/PolyaGammaSampler.h",
+                "line": 20,
+                "column": 22,
+                "hidden": false
+            },
+            {
+                "usr": "c:PolyaGammaSampler.h@F@rtigauss#d#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "rtigauss(double)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/PolyaGammaSampler.h",
+                "line": 30,
+                "column": 22,
+                "hidden": false
+            },
+            {
+                "usr": "c:PolyaGammaSampler.h@F@a#I#d#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "a(int, double)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/PolyaGammaSampler.h",
+                "line": 64,
+                "column": 22,
+                "hidden": false
+            }
+        ],
+        "hidden": false
+    },
+    {
+        "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
+        "file_last_write": 1656872070.0,
+        "definitions": [
+            {
+                "usr": "c:@S@PresenceOnly",
+                "kind": 2,
+                "parent_name": "",
+                "name": "PresenceOnly",
+                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
+                "line": 11,
+                "column": 7,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PresenceOnly@F@getBeta#",
+                "kind": 7,
+                "parent_name": "PresenceOnly",
+                "name": "getBeta",
+                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
+                "line": 72,
+                "column": 19,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PresenceOnly@F@getDelta#",
+                "kind": 7,
+                "parent_name": "PresenceOnly",
+                "name": "getDelta",
+                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
+                "line": 73,
+                "column": 19,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PresenceOnly@F@getLambdaStar#",
+                "kind": 7,
+                "parent_name": "PresenceOnly",
+                "name": "getLambdaStar",
+                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
+                "line": 74,
+                "column": 10,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PresenceOnly@F@getU#",
+                "kind": 7,
+                "parent_name": "PresenceOnly",
+                "name": "getU",
+                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
+                "line": 75,
+                "column": 19,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PresenceOnly@F@getXprime#",
+                "kind": 7,
+                "parent_name": "PresenceOnly",
+                "name": "getXprime",
+                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
+                "line": 76,
+                "column": 19,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PresenceOnly@F@getUsize#",
+                "kind": 7,
+                "parent_name": "PresenceOnly",
+                "name": "getUsize",
+                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
+                "line": 77,
+                "column": 7,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PresenceOnly@F@getXpsize#",
+                "kind": 7,
+                "parent_name": "PresenceOnly",
+                "name": "getXpsize",
+                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
+                "line": 78,
+                "column": 7,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PresenceOnly@F@getMarksPrime#",
+                "kind": 7,
+                "parent_name": "PresenceOnly",
+                "name": "getMarksPrime",
+                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
+                "line": 79,
+                "column": 19,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PresenceOnly@F@getMarksMu#",
+                "kind": 7,
+                "parent_name": "PresenceOnly",
+                "name": "getMarksMu",
+                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
+                "line": 80,
+                "column": 10,
+                "hidden": false
+            },
+            {
+                "usr": "c:@S@PresenceOnly@F@getMarksNugget#",
+                "kind": 7,
+                "parent_name": "PresenceOnly",
+                "name": "getMarksNugget",
+                "file": "/Users/anthorg/Documents/pompp/src/include/PresenceOnly.hpp",
+                "line": 81,
+                "column": 10,
+                "hidden": false
+            }
+        ],
+        "hidden": false
+    },
+    {
+        "file": "/Users/anthorg/Documents/pompp/src/include/RegressionPrior.hpp",
+        "file_last_write": 1664084386.0,
+        "definitions": [],
+        "hidden": false
+    },
+    {
+        "file": "/Users/anthorg/Documents/pompp/src/include/safeR.hpp",
+        "file_last_write": 1656872070.0,
+        "definitions": [
+            {
+                "usr": "c:@F@runif#d#d#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "runif(double, double)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/safeR.hpp",
+                "line": 9,
+                "column": 15,
+                "hidden": false
+            },
+            {
+                "usr": "c:@F@rnorm#d#d#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "rnorm(double, double)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/safeR.hpp",
+                "line": 16,
+                "column": 15,
+                "hidden": false
+            },
+            {
+                "usr": "c:@F@rgamma#d#d#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "rgamma(double, double)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/safeR.hpp",
+                "line": 23,
+                "column": 15,
+                "hidden": false
+            },
+            {
+                "usr": "c:@F@rpois#d#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "rpois(double)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/safeR.hpp",
+                "line": 30,
+                "column": 15,
+                "hidden": false
+            },
+            {
+                "usr": "c:@F@rnorm#I#d#d#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "rnorm(int, double, double)",
+                "file": "/Users/anthorg/Documents/pompp/src/include/safeR.hpp",
+                "line": 37,
+                "column": 24,
+                "hidden": false
+            }
+        ],
+        "hidden": false
+    },
+    {
+        "file": "/Users/anthorg/Documents/pompp/src/r_wrapper.cpp",
+        "file_last_write": 1656872070.0,
+        "definitions": [
+            {
+                "usr": "c:@F@cppPOMPP#$@N@Eigen@S@Matrix>#d#VI-1#VI1#VI0#VI-1#VI1#S0_#d#$@N@Rcpp@S@String#S1_#S1_#$@N@Rcpp@S@Vector>#VI19#@N@Rcpp@ST>1#T@PreserveStorage#S2_#d#d#S1_#*$@S@SEXPREC#d#S1_#d#d#d#d#d#d#$@N@Eigen@S@Matrix>#d#VI-1#VI-1#VI0#VI-1#VI-1#S0_#S5_#$@N@Eigen@S@Matrix>#I#VI-1#VI1#VI0#VI-1#VI1#S6_#S6_#S6_#d#d#d#I#I#I#I#I#I#I#b#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "cppPOMPP(Eigen::VectorXd, Eigen::VectorXd, double, Rcpp::String, Rcpp::String, Rcpp::String, Rcpp::List, Rcpp::List, double, double, Rcpp::String, SEXP, double, Rcpp::String, double, double, double, double, double, double, Eigen::MatrixXd, Eigen::VectorXd, Eigen::MatrixXd, Eigen::VectorXi, Eigen::VectorXi, Eigen::VectorXi, Eigen::VectorXi, double, double, double, int, int, int, int, int, int, int, bool)",
+                "file": "/Users/anthorg/Documents/pompp/src/r_wrapper.cpp",
+                "line": 12,
+                "column": 6,
+                "hidden": false
+            }
+        ],
+        "hidden": false
+    }
+]

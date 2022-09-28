@@ -1,0 +1,512 @@
+res <- microbenchmark::microbenchmark(
+m2 = kmeans(wine, 2),
+m3 = kmeans(wine, 3),
+m4 = kmeans(wine, 4),
+m5 = kmeans(wine, 5),
+m6 = kmeans(wine, 6),
+m7 = kmeans(wine, 7),
+m8 = kmeans(wine, 8),
+m9 = kmeans(wine, 9),
+m10 = kmeans(wine, 10)
+)
+res
+boxplot(res)
+?multcomp
+description(multcomp)
+?signif
+?requireNamespace
+?tryCatch
+?setHook
+plot(PandemicLP::load_covid("Brazil"))
+plot(PandemicLP::load_covid("Brazil", "RJ"))
+plot(PandemicLP::load_covid("Brazil", "RJ"))
+install.packages("PandemicLP")
+10 * diag(4)
+roxygen2::roxygenise()
+roxygen2::roxygenise()
+roxygen2::roxygenise()
+library(pompp)
+library(pompp)
+set.seed(123)
+setwd("/home/anthorg/Documents/Work/pkg/pompp")
+#### Read data ####
+simulated <- readRDS("tests/data/simulatedData.rds")
+phi <- 0.3
+sigma2 <- 2
+# runMCMC <- fit_pompp(
+#   rep(0, 4), rep(0, 4), 10,
+#   list(mean = rep(0, 4), covariance = 10 * diag(4)),
+#   list(mean = rep(0, 4), covariance = 10 * diag(4)),
+#   list(a = 0.001, b = 0.001),
+#   cbind(simulated$Xint, simulated$Xobs, simulated$grid),
+#   1, 0, 1, 1, list(mean = 0, variance = 100),
+#   list(a = 0.001, b = 0.001),
+#   list(a = 0.001, b = 0.001),
+#   cbind(simulated$Z_X, simulated$W_X),
+#   simulated$observedMarks, simulated$X,
+#   1:3, 4:5, 1:3, 4:5,
+#   sqrt(2), sigma2, phi,
+#   20, 6, 7,
+#   10000, 1, 20000
+# )
+# sink("output.txt")
+runMCMC <- fit_pompp(
+rep(0, 4), rep(0, 4), 10,
+list(mean = rep(0, 4), covariance = 10 * diag(4)),
+list(mean = rep(0, 4), covariance = 10 * diag(4)),
+list(a = 0.001, b = 0.001),
+cbind(simulated$Xint, simulated$Xobs, simulated$grid),
+1, 0, 1, 1, list(mean = 0, variance = 100),
+list(a = 0.001, b = 0.001),
+list(a = 0.001, b = 0.001),
+cbind(simulated$Z_X, simulated$W_X),
+simulated$observedMarks, simulated$X,
+1:3, 4:5, 1:3, 4:5,
+sqrt(2), sigma2, phi,
+5, 6, 7,
+0, 1, 2
+)
+library(geoR)
+set.seed(123)
+setwd("~/Dropbox/Work/PosPreferential/pompp")
+#### True values ####
+source("tests/trueValues.R")
+nb <- length(beta)
+nd <- length(delta)
+#### Actual simulation ####
+totalPoints <- rpois(1, lambdaStar)
+totalPositions <- cbind(runif(totalPoints), runif(totalPoints))
+#### Intensity ####
+Xint <- cbind(grf(1, grid = rbind(totalPositions, squareGrid), cov.model = "exponential",
+cov.pars = c(sigma2, phi), kappa = 0, method = "cholesky")$data,
+grf(1, grid = rbind(totalPositions, squareGrid), cov.model = "exponential",
+cov.pars = c(sigma2, phi), kappa = 0, method = "cholesky")$data,
+grf(1, grid = rbind(totalPositions, squareGrid), cov.model = "exponential",
+cov.pars = c(sigma2, phi), kappa = 0, method = "cholesky")$data)
+unifs1 <- runif(totalPoints)
+intensitySelection <- which(log(unifs1) - log1p(-unifs1) <=
+beta[1] + Xint[1:totalPoints, ] %*% beta[2:nb])
+intensitySelected <- length(intensitySelection)
+occurrencesPositions <- totalPositions[intensitySelection, ]
+occurrencesXint <- Xint[intensitySelection, ]
+Xobs <- cbind(grf(1, grid = rbind(occurrencesPositions, squareGrid), cov.model = "exponential",
+cov.pars = c(sigma2, phi), kappa = 0, method = "cholesky")$data,
+grf(1, grid = rbind(occurrencesPositions, squareGrid), cov.model = "exponential",
+cov.pars = c(sigma2, phi), kappa = 0, method = "cholesky")$data)
+S <- grf(1, grid = rbind(occurrencesPositions), cov.model = "exponential",
+cov.pars = c(sigma2, phi), kappa = 0, method = "cholesky")$data
+unifs2 <- runif(intensitySelected)
+observabilitySelection <- which(log(unifs2) - log1p(-unifs2) <=
+delta[1] + Xobs[1:intensitySelected, ] %*% delta[2:nd] +
+gamma * S)
+observabilitySelected <- length(observabilitySelection)
+marks <- rgamma(intensitySelected, shape, shape / exp(mu + S + rnorm(intensitySelected, 0, sqrt(nugget))))
+observedPositions <- occurrencesPositions[observabilitySelection, ]
+observedXint <- occurrencesXint[observabilitySelection, ]
+observedXobs <- Xobs[observabilitySelection, ]
+observedMarks <- marks[observabilitySelection]
+simulated <-
+list(Xint = Xint[-(1:totalPoints), ], Xobs = Xobs[-(1:intensitySelected),],
+grid = squareGrid, X = observedPositions,
+Z_X = observedXint, W_X = observedXobs,
+observedMarks = observedMarks,
+Xp = occurrencesPositions[-observabilitySelection, ],
+Z_Xp = occurrencesXint[-observabilitySelection, ],
+W_Xp = Xobs[-observabilitySelection, ],
+unobservedMarks = marks[-observabilitySelection])
+phi <- 0.3
+sigma2 <- 2
+#   list(a = 0.001, b = 0.001),
+#   list(a = 0.001, b = 0.001),
+#   cbind(simulated$Z_X, simulated$W_X),
+#   simulated$observedMarks, simulated$X,
+#   1:3, 4:5, 1:3, 4:5,
+#   sqrt(2), sigma2, phi,
+#   20, 6, 7,
+#   10000, 1, 20000
+# )
+# sink("output.txt")
+runMCMC <- fit_pompp(
+rep(0, 4), rep(0, 4), 10,
+list(mean = rep(0, 4), covariance = 10 * diag(4)),
+list(mean = rep(0, 4), covariance = 10 * diag(4)),
+list(a = 0.001, b = 0.001),
+cbind(simulated$Xint, simulated$Xobs, simulated$grid),
+1, 0, 1, 1, list(mean = 0, variance = 100),
+list(a = 0.001, b = 0.001),
+list(a = 0.001, b = 0.001),
+cbind(simulated$Z_X, simulated$W_X),
+simulated$observedMarks, simulated$X,
+1:3, 4:5, 1:3, 4:5,
+sqrt(2), sigma2, phi,
+5, 6, 7,
+0, 1, 2
+)
+library(pompp)
+library(dplyr)
+library(ggplot2)
+library(bayesplot)
+source("tests/trueValues.R")
+runMCMC <- readRDS("tests/data/mcmcResult.rds")
+getwd()
+runMCMC <- readRDS("tests/mcmcResult.rds")
+length(runMCMC)
+mcmc_mat <- do.call(cbind, runMCMC)
+as.data.frame(mcmc_mat[-(1:10),]) %>% mcmc_trace()
+summary(mcmc_mat[-(1:10),])
+beta
+delta
+gamma
+roxygen2::roxygenise()
+roxygen2::roxygenise()
+library(pompp)
+library(pompp)
+set.seed(123)
+setwd("/home/anthorg/Documents/Work/pkg/pompp")
+# setwd("/home/anthorg/Documents/Work/pkg/pompp")
+setwd("/Users/anthorg/Dropbox/Work/PosPreferential/pompp")
+#### Read data ####
+simulated <- readRDS("tests/data/simulatedData.rds")
+#### Read data ####
+# simulated <- readRDS("tests/data/simulatedData.rds")
+simulated <- readRDS("tests/simulatedData.rds")
+source("tests/simulateData.R")
+source("tests/mcmc_test.r")
+library(pompp)
+library(dplyr)
+library(ggplot2)
+library(bayesplot)
+source("tests/trueValues.R")
+runMCMC <- readRDS("tests/mcmcResult.rds")
+length(runMCMC)
+mcmc_mat <- do.call(cbind, runMCMC)
+summary(mcmc_mat[-(1:10),])
+roxygen2::roxygenise()
+setwd("~/Documents/pompp")
+roxygen2::roxygenise()
+library(pompp)
+source("tests/mcmc_test.r")
+# setwd("/home/anthorg/Documents/Work/pkg/pompp")
+setwd("/Users/anthorg/Dropbox/Work/PosPreferential/pompp")
+set.seed(123)
+#### Read data ####
+# simulated <- readRDS("tests/data/simulatedData.rds")
+simulated <- readRDS("tests/simulatedData.rds")
+phi <- 0.3
+sigma2 <- 2
+#   list(a = 0.001, b = 0.001),
+#   list(a = 0.001, b = 0.001),
+#   cbind(simulated$Z_X, simulated$W_X),
+#   simulated$observedMarks, simulated$X,
+#   1:3, 4:5, 1:3, 4:5,
+#   sqrt(2), sigma2, phi,
+#   20, 6, 7,
+#   10000, 1, 20000
+# )
+# sink("output.txt")
+runMCMC <- fit_pompp(
+rep(0, 4), rep(0, 4), 10,
+list(mean = rep(0, 4), covariance = 10 * diag(4)),
+list(mean = rep(0, 4), covariance = 10 * diag(4)),
+list(a = 0.001, b = 0.001),
+cbind(simulated$Xint, simulated$Xobs, simulated$grid),
+1, 0, 1, 1, list(mean = 0, variance = 100),
+list(a = 0.001, b = 0.001),
+list(a = 0.001, b = 0.001),
+cbind(simulated$Z_X, simulated$W_X),
+simulated$observedMarks, simulated$X,
+1:3, 4:5, 1:3, 4:5,
+sqrt(2), sigma2, phi,
+5, 6, 7,
+0, 1, 2
+)
+summary(mcmc_mat)
+#   list(a = 0.001, b = 0.001),
+#   list(a = 0.001, b = 0.001),
+#   cbind(simulated$Z_X, simulated$W_X),
+#   simulated$observedMarks, simulated$X,
+#   1:3, 4:5, 1:3, 4:5,
+#   sqrt(2), sigma2, phi,
+#   20, 6, 7,
+#   10000, 1, 20000
+# )
+# sink("output.txt")
+runMCMC <- fit_pompp(
+rep(0, 4), rep(0, 4), 10,
+list(mean = rep(0, 4), covariance = 10 * diag(4)),
+list(mean = rep(0, 4), covariance = 10 * diag(4)),
+list(a = 0.001, b = 0.001),
+cbind(simulated$Xint, simulated$Xobs, simulated$grid),
+1, 0, 1, 1, list(mean = 0, variance = 100),
+list(a = 0.001, b = 0.001),
+list(a = 0.001, b = 0.001),
+cbind(simulated$Z_X, simulated$W_X),
+simulated$observedMarks, simulated$X,
+1:3, 4:5, 1:3, 4:5,
+sqrt(2), sigma2, phi,
+5, 6, 7,
+0, 1, 200
+)
+# saveRDS(runMCMC, "tests/data/mcmcResult.rds")
+saveRDS(runMCMC, "tests/mcmcResult.rds")
+length(runMCMC)
+mcmc_mat <- do.call(cbind, runMCMC)
+as.data.frame(mcmc_mat[-(1:10),]) %>% mcmc_trace()
+summary(mcmc_mat[-(1:10),])
+#### True values ####
+source("tests/trueValues.R")
+beta
+.delta
+delta
+gamma
+#   list(a = 0.001, b = 0.001),
+#   list(a = 0.001, b = 0.001),
+#   cbind(simulated$Z_X, simulated$W_X),
+#   simulated$observedMarks, simulated$X,
+#   1:3, 4:5, 1:3, 4:5,
+#   sqrt(2), sigma2, phi,
+#   20, 6, 7,
+#   10000, 1, 20000
+# )
+# sink("output.txt")
+runMCMC <- fit_pompp(
+rep(0, 4), rep(0, 4), 10,
+list(mean = rep(0, 4), covariance = 10 * diag(4)),
+list(mean = rep(0, 4), covariance = 10 * diag(4)),
+list(a = 0.001, b = 0.001),
+cbind(simulated$Xint, simulated$Xobs, simulated$grid),
+1, 0, 1, 1, list(mean = 0, variance = 100),
+list(a = 0.001, b = 0.001),
+list(a = 0.001, b = 0.001),
+cbind(simulated$Z_X, simulated$W_X),
+simulated$observedMarks, simulated$X,
+1:3, 4:5, 1:3, 4:5,
+sqrt(2), sigma2, phi,
+5, 6, 7,
+100, 1, 2000
+)
+#   list(a = 0.001, b = 0.001),
+#   list(a = 0.001, b = 0.001),
+#   cbind(simulated$Z_X, simulated$W_X),
+#   simulated$observedMarks, simulated$X,
+#   1:3, 4:5, 1:3, 4:5,
+#   sqrt(2), sigma2, phi,
+#   20, 6, 7,
+#   10000, 1, 20000
+# )
+# sink("output.txt")
+runMCMC <- fit_pompp(
+rep(0, 4), rep(0, 4), 10,
+list(mean = rep(0, 4), covariance = 10 * diag(4)),
+list(mean = rep(0, 4), covariance = 10 * diag(4)),
+list(a = 0.001, b = 0.001),
+cbind(simulated$Xint, simulated$Xobs, simulated$grid),
+1, 0, 1, 1, list(mean = 0, variance = 100),
+list(a = 0.001, b = 0.001),
+list(a = 0.001, b = 0.001),
+cbind(simulated$Z_X, simulated$W_X),
+simulated$observedMarks, simulated$X,
+1:3, 4:5, 1:3, 4:5,
+sqrt(2), sigma2, phi,
+5, 6, 7,
+100, 1, 2000
+)
+# saveRDS(runMCMC, "tests/data/mcmcResult.rds")
+saveRDS(runMCMC, "tests/mcmcResult.rds")
+mcmc_mat <- do.call(cbind, runMCMC)
+as.data.frame(mcmc_mat) %>% mcmc_trace()
+summary(mcmc_mat)
+as.data.frame(mcmc_mat[-(1:10), 1:9]) %>% mcmc_trace()
+roxygen2::roxygenise()
+library(pompp)
+library(pompp)
+set.seed(123)
+# setwd("/home/anthorg/Documents/Work/pkg/pompp")
+setwd("/Users/anthorg/Dropbox/Work/PosPreferential/pompp")
+#### Read data ####
+# simulated <- readRDS("tests/data/simulatedData.rds")
+simulated <- readRDS("tests/simulatedData.rds")
+phi <- 0.3
+sigma2 <- 2
+# runMCMC <- fit_pompp(
+#   rep(0, 4), rep(0, 4), 10,
+#   list(mean = rep(0, 4), covariance = 10 * diag(4)),
+#   list(mean = rep(0, 4), covariance = 10 * diag(4)),
+#   list(a = 0.001, b = 0.001),
+#   cbind(simulated$Xint, simulated$Xobs, simulated$grid),
+#   1, 0, 1, 1, list(mean = 0, variance = 100),
+#   list(a = 0.001, b = 0.001),
+#   list(a = 0.001, b = 0.001),
+#   cbind(simulated$Z_X, simulated$W_X),
+#   simulated$observedMarks, simulated$X,
+#   1:3, 4:5, 1:3, 4:5,
+#   sqrt(2), sigma2, phi,
+#   20, 6, 7,
+#   10000, 1, 20000
+# )
+# sink("output.txt")
+runMCMC <- fit_pompp(
+rep(0, 4), rep(0, 4), 10,
+list(mean = rep(0, 4), covariance = 10 * diag(4)),
+list(mean = rep(0, 4), covariance = 10 * diag(4)),
+list(a = 0.001, b = 0.001),
+cbind(simulated$Xint, simulated$Xobs, simulated$grid),
+1, 0, 1, 1, list(mean = 0, variance = 100),
+list(a = 0.001, b = 0.001),
+list(a = 0.001, b = 0.001),
+cbind(simulated$Z_X, simulated$W_X),
+simulated$observedMarks, simulated$X,
+1:3, 4:5, 1:3, 4:5,
+sqrt(2), sigma2, phi,
+5, 6, 7,
+0, 1, 200
+)
+library(pompp)
+library(dplyr)
+library(ggplot2)
+library(bayesplot)
+source("tests/trueValues.R")
+runMCMC <- readRDS("tests/mcmcResult.rds")
+runMCMC <- fit_pompp(
+rep(0, 4), rep(0, 4), 10,
+list(mean = rep(0, 4), covariance = 10 * diag(4)),
+list(mean = rep(0, 4), covariance = 10 * diag(4)),
+list(a = 0.001, b = 0.001),
+cbind(simulated$Xint, simulated$Xobs, simulated$grid),
+1, 0, 1, 1, list(mean = 0, variance = 100),
+list(a = 0.001, b = 0.001),
+list(a = 0.001, b = 0.001),
+cbind(simulated$Z_X, simulated$W_X),
+simulated$observedMarks, simulated$X,
+1:3, 4:5, 1:3, 4:5,
+sqrt(2), sigma2, phi,
+20, 6, 7,
+10000, 1, 20000
+)
+# saveRDS(runMCMC, "tests/data/mcmcResult.rds")
+saveRDS(runMCMC, "tests/mcmcResult.rds")
+library(pompp)
+library(dplyr)
+library(ggplot2)
+library(bayesplot)
+source("tests/trueValues.R")
+runMCMC <- readRDS("tests/mcmcResult.rds")
+as.data.frame(mcmc_mat[-(1:10), 1:9]) %>% mcmc_trace()
+runMCMC <- readRDS("tests/mcmcResult.rds"); mcmc_mat <- do.call(cbind, runMCMC)
+as.data.frame(mcmc_mat[-(1:10), 1:9]) %>% mcmc_trace()
+as.data.frame(mcmc_mat[-(1:10), 1:9]) %>% mcmc_trace()
+as.data.frame(mcmc_mat[-(1:10), 1:9]) %>% mcmc_trace()
+summary(mcmc_mat[-(1:10),])
+install.packages(c("bookdown", "classInt", "Compositional", "DBI", "dbplyr", "e1071", "emplik", "globals", "igraph", "mnormt", "nlme", "parallelly", "pchc", "pkgload", "posterior", "processx", "proxy", "ps", "raster", "RcppArmadillo", "RCurl", "restfulr", "rgl", "rlang", "sandwich", "SNPassoc", "terra", "tiledb", "tinytex", "XML"))
+roxygen2::roxygenise()
+library(pompp)
+roxygen2::roxygenise()
+library(pompp)
+?fit_pompp
+beta <- c(-1, 2) # Intercept = -1. Only one covariate
+delta <- c(3, 4) # Intercept = 3. Only one covariate
+lambdaStar <- 1000
+gamma <- 2
+mu <- 5
+total_points <- rpois(1, lambdaStar)
+random_points <- cbind(runif(total_points), runif(total_points))
+grid_size <- 50
+# Find covariate values to explain the species occurrence.
+# We give them a Gaussian spatial structure.
+reg_grid <- as.matrix(expand.grid(seq(0, 1, len = grid_size), seq(0, 1, len = grid_size)))
+Z <- MASS::mvrnorm(1, rep(0, total_points + grid_size * grid_size),
+3 * exp(-as.matrix(dist(rbind(random_points, reg_grid))) / 0.2))
+Z1 <- Z[1:total_points]; Z2 <- Z[-(1:total_points)]
+# Thin the points by comparing the retaining probabilities with uniforms
+# in the log scale to find the occurrences
+occurrences <- log(runif(total_points)) <= -log1p(exp(-beta[1] - beta[2] * Z1))
+n_occurrences <- sum(occurrences)
+occurrences_points <- random_points[occurrences,]
+occurrences_Z <- Z1[occurrences]
+# Find covariate values to explain the observation bias.
+# Additionally create a regular grid to plot the covariate later.
+W <- MASS::mvrnorm(1, rep(0, n_occurrences + grid_size * grid_size),
+2 * exp(-as.matrix(dist(rbind(occurrences_points, reg_grid))) / 0.3))
+W1 <- W[1:n_occurrences]; W2 <- W[-(1:n_occurrences)]
+S <- MASS::mvrnorm(1, rep(0, n_occurrences),
+2 * exp(-as.matrix(dist(occurrences_points)) / 0.3))
+# Find the presence-only observations.
+marks <- exp(mu + S + rnorm(n_occurrences, 0, 0.3))
+po_sightings <- log(runif(n_occurrences)) <= -log1p(exp(-delta[1] - delta[2] * W1 - gamma * S))
+n_po <- sum(po_sightings)
+po_points <- occurrences_points[po_sightings, ]
+po_Z <- occurrences_Z[po_sightings]
+po_W <- W1[po_sightings]
+po_marks <- marks[po_sightings]
+jointPrior <- prior(
+NormalPrior(rep(0, 2), 10 * diag(2)), # Beta
+NormalPrior(rep(0, 3), 10 * diag(3)), # Delta
+GammaPrior(0.00001, 0.00001), # LambdaStar
+NormalPrior(0, 100), GammaPrior(0.001, 0.001) # Marks
+)
+model <- pompp_model(po = cbind(po_Z, po_W, po_points, po_marks),
+intensitySelection = 1, observabilitySelection = 2, marksSelection = 5,
+coordinates = 3:4,
+intensityLink = "logit", observabilityLink = "logit",
+initial_values = 2, joint_prior = jointPrior)
+bkg <- cbind(Z2, W2, reg_grid) # Create background
+fit <- fit_pompp(model, bkg, area = 1, mcmc_setup = list(burnin = 50, iter = 100))
+fit <- fit_pompp(model, bkg, neighborhoodSize = 20, area = 1, mcmc_setup = list(burnin = 50, iter = 100))
+library(pompp)
+fit <- fit_pompp(model, bkg, neighborhoodSize = 20, area = 1,
+mcmc_setup = list(burnin = 10, iter = 20))
+debug(fit_pompp, signature = methods::signature(object = "pompp_model",
+background = "matrix"))
+fit <- fit_pompp(model, bkg, neighborhoodSize = 20, area = 1,
+mcmc_setup = list(burnin = 10, iter = 20))
+parnames
+colnames(mcmcRun[[c]])
+parnames
+undebug(fit_pompp, signature = methods::signature(object = "pompp_model",
+background = "matrix"))
+library(pompp)
+fit <- fit_pompp(model, bkg, neighborhoodSize = 20, area = 1,
+mcmc_setup = list(burnin = 10, iter = 20))
+debug(fit_pompp, signature = methods::signature(object = "pompp_model",
+background = "matrix"))
+fit <- fit_pompp(model, bkg, neighborhoodSize = 20, area = 1,
+mcmc_setup = list(burnin = 10, iter = 20))
+ncol(mcmcRun)
+library(pompp)
+fit <- fit_pompp(model, bkg, neighborhoodSize = 20, area = 1,
+mcmc_setup = list(burnin = 10, iter = 20))
+library(pompp)
+fit <- fit_pompp(model, bkg, neighborhoodSize = 20, area = 1,
+mcmc_setup = list(burnin = 10, iter = 20))
+summary(fit)
+fit
+jointPrior
+diag(diag)(3)
+diag(diag(3))
+library(pompp)
+fit
+bayesplot::mcmc_trace(fit)
+fit$mcmc_chains %>% dim
+dim(fit$mcmc_chains)
+length(fit$mcmc_chains)
+dim(fit$mcmc_chains[[1]])
+library(pompp)
+fit
+bayesplot::mcmc_trace(fit)
+debug(as.array.pomp_fit)
+debug(pompp:::as.array.pomp_fit)
+debug(pompp::as.array.pomp_fit)
+debug(pompp:::as.array.pompp_fit)
+bayesplot::mcmc_trace(fit)
+parnames
+namesAid(parnames)
+colnames(chains)
+library(pompp)
+bayesplot::mcmc_trace(fit)
+bayesplot::mcmc_dens(fit)
+as.data.frame(fit)
+names(as.data.frame(fit))
+colnames(as.matrix(fit))
+roxygen2::roxygenise()
+roxygen2::roxygenise()
+roxygen2::roxygenise()
