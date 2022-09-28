@@ -1,5 +1,5 @@
 <!-- badges: start -->
-[![CRAN\ Status\ Badge](http://r-pkg.org/badges/version/bayesPO?color=blue)](https://CRAN.R-project.org/package=bayesPO)
+[![CRAN\ Status\ Badge](http://r-pkg.org/badges/version/pompp?color=blue)](https://CRAN.R-project.org/package=pompp)
 [![Downloads](http://cranlogs.r-pkg.org/badges/pompp?color=blue)](http://CRAN.rstudio.com/package=pompp)
 [![R-CMD-check](https://github.com/GuidoAMoreira/pompp/workflows/R-CMD-check/badge.svg)](https://github.com/GuidoAMoreira/pompp/actions)
 <!-- badges: end -->
