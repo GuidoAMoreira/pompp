@@ -8,6 +8,8 @@
 
 pompp is an R package used for presence-only data where marks are associated with the locations. It will get more functionalities over time and the newest version will always be available in this page.
 
+**Note:** Github CRAN test fails because of the long runtimes for the examples, but the fact that it's in CRAN means that it works.
+
 # Installing pompp
 
 The CRAN version can be installed with
