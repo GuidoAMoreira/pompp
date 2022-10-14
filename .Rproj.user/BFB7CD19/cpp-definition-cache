@@ -565,19 +565,8 @@
     },
     {
         "file": "/Users/anthorg/Documents/pompp/src/r_wrapper.cpp",
-        "file_last_write": 1656872070.0,
-        "definitions": [
-            {
-                "usr": "c:@F@cppPOMPP#$@N@Eigen@S@Matrix>#d#VI-1#VI1#VI0#VI-1#VI1#S0_#d#$@N@Rcpp@S@String#S1_#S1_#$@N@Rcpp@S@Vector>#VI19#@N@Rcpp@ST>1#T@PreserveStorage#S2_#d#d#S1_#*$@S@SEXPREC#d#S1_#d#d#d#d#d#d#$@N@Eigen@S@Matrix>#d#VI-1#VI-1#VI0#VI-1#VI-1#S0_#S5_#$@N@Eigen@S@Matrix>#I#VI-1#VI1#VI0#VI-1#VI1#S6_#S6_#S6_#d#d#d#I#I#I#I#I#I#I#b#",
-                "kind": 6,
-                "parent_name": "",
-                "name": "cppPOMPP(Eigen::VectorXd, Eigen::VectorXd, double, Rcpp::String, Rcpp::String, Rcpp::String, Rcpp::List, Rcpp::List, double, double, Rcpp::String, SEXP, double, Rcpp::String, double, double, double, double, double, double, Eigen::MatrixXd, Eigen::VectorXd, Eigen::MatrixXd, Eigen::VectorXi, Eigen::VectorXi, Eigen::VectorXi, Eigen::VectorXi, double, double, double, int, int, int, int, int, int, int, bool)",
-                "file": "/Users/anthorg/Documents/pompp/src/r_wrapper.cpp",
-                "line": 12,
-                "column": 6,
-                "hidden": false
-            }
-        ],
+        "file_last_write": 1665760749.0,
+        "definitions": [],
         "hidden": false
     }
 ]
