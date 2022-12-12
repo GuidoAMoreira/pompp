@@ -1,7 +1,0 @@
-datasets="/Library/Frameworks/R.framework/Versions/4.2/Resources/library/datasets"
-grDevices="/Library/Frameworks/R.framework/Versions/4.2/Resources/library/grDevices"
-graphics="/Library/Frameworks/R.framework/Versions/4.2/Resources/library/graphics"
-methods="/Library/Frameworks/R.framework/Versions/4.2/Resources/library/methods"
-pompp="/Users/anthorg/Documents/pompp"
-stats="/Library/Frameworks/R.framework/Versions/4.2/Resources/library/stats"
-utils="/Library/Frameworks/R.framework/Versions/4.2/Resources/library/utils"
