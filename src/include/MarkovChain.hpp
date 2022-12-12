@@ -12,10 +12,11 @@ class MarkovChain {
 //  MCMCprogress* progressBar;
 
   virtual double applyTransitionKernel() = 0; // returns log posterior
+  void doNothing();
 public:
 //  MarkovChain() : iteration(0), progressBar(new MCMCprogress()) {}
   MarkovChain() : iteration(0) {}
-  virtual ~MarkovChain();
+  virtual ~MarkovChain() {}
 
   // Update the chain
   void update() {

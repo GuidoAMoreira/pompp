@@ -132,3 +132,4 @@ inline double PresenceOnly::applyTransitionKernel() {
   return out + privateOut1 + privateOut2;
 }
 
+PresenceOnly::~PresenceOnly() {delete beta; delete delta; delete bkg;}
