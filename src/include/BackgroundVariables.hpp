@@ -3,14 +3,14 @@
 
 #include "GaussianProcess.hpp"
 #include <RcppEigen.h>
+#include "safeR.hpp"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
 // [[Rcpp::plugins(openmp)]]
 
-const int INTENSITY_VARIABLES = 0;
-const int OBSERVABILITY_VARIABLES = 1;
+enum varType {INTENSITY_VARIABLES, OBSERVABILITY_VARIABLES};
 
 class BackgroundVariables {
   const std::vector<int> intensityCols, observabilityCols;
@@ -29,24 +29,27 @@ class BackgroundVariables {
     return out;
   }
   // Retrieve variables for any set of columns
-  virtual Eigen::VectorXd getVariablesVec(const Eigen::VectorXd& coordinates,
+  virtual Eigen::VectorXd getVariablesVec(const Eigen::MatrixXd& coordinates,
                                           std::vector<int> columns) = 0;
 public:
   // Getters
-  Eigen::MatrixXd getVarMat(const Eigen::MatrixXd& coordinates, int type) {
+  Eigen::MatrixXd getVarMat(const Eigen::MatrixXd& coordinates, varType type) {
     if (type == INTENSITY_VARIABLES) return getVariablesMat(coordinates, intensityCols);
     if (type == OBSERVABILITY_VARIABLES) return getVariablesMat(coordinates, observabilityCols);
     return Eigen::MatrixXd(0, 0);
   }
-  Eigen::VectorXd getVarVec(const Eigen::VectorXd& coordinates,
+  Eigen::VectorXd getVarVec(const Eigen::MatrixXd& coordinates,
                             double& mark,
-                            double nugget, double mu, int type) {
+                            double nugget, double mu, varType type) {
+    Eigen::VectorXd coords(2);
+    coords(0) = coordinates(0, 0);
+    coords(1) = coordinates(0, 1);
     if (type == INTENSITY_VARIABLES) {
       Eigen::VectorXd out(intensityCols.size() + (useGPint ? 1 : 0));
       out.head(intensityCols.size()) = getVariablesVec(coordinates, intensityCols);
       if (useGPint)
         out(intensityCols.size()) =
-          spatialProcessInt->getNewPoint(coordinates.head(2), mark, nugget, mu);
+          spatialProcessInt->getNewPoint(coords, mark, nugget, mu);
       return out;
     }
     if (type == OBSERVABILITY_VARIABLES) {
@@ -54,12 +57,12 @@ public:
       out.head(observabilityCols.size()) = getVariablesVec(coordinates, observabilityCols);
       if (useGPobs)
         out(observabilityCols.size()) =
-          spatialProcessObs->getNewPoint(coordinates.head(2), mark, nugget, mu);
+          spatialProcessObs->getNewPoint(coords, mark, nugget, mu);
       return out;
     }
     return Eigen::VectorXd(0);
   }
-  Eigen::VectorXd getVarVec(const Eigen::VectorXd& coordinates, int type) {
+  Eigen::VectorXd getVarVec(const Eigen::VectorXd& coordinates, varType type) {
     if (type == INTENSITY_VARIABLES) {
       return getVariablesVec(coordinates, intensityCols);
     }
@@ -68,18 +71,18 @@ public:
     }
     return Eigen::VectorXd(0);
   }
-  Eigen::VectorXd getGP(int type) {
+  Eigen::VectorXd getGP(varType type) {
     if (type == INTENSITY_VARIABLES) return spatialProcessInt->getAugmentedValuesTail();
     if (type == OBSERVABILITY_VARIABLES) return spatialProcessObs->getAugmentedValuesTail();
     return Eigen::VectorXd(0);
   }
-  Eigen::VectorXd getGPfull(int type) {
+  Eigen::VectorXd getGPfull(varType type) {
     if (type == INTENSITY_VARIABLES) return spatialProcessInt->getAugmentedValues();
     if (type == OBSERVABILITY_VARIABLES) return spatialProcessObs->getAugmentedValues();
     return Eigen::VectorXd(0);
   }
   // Setters
-  void setGP(GaussianProcess* gp, int type) {
+  void setGP(GaussianProcess* gp, varType type) {
     if (type == INTENSITY_VARIABLES) {
       spatialProcessInt = gp;
       useGPint = true;
@@ -116,7 +119,7 @@ public:
     if (useGPint) spatialProcessInt->startUp(howMany);
     if (useGPobs) spatialProcessObs->startUp(howMany);
   }
-  void acceptNewPoint(int type) {
+  void acceptNewPoint(varType type) {
     if (type == INTENSITY_VARIABLES && useGPint)
       spatialProcessInt->acceptNewPoint();
     if (type == OBSERVABILITY_VARIABLES && useGPobs)
@@ -142,11 +145,11 @@ class MatrixVariables : public BackgroundVariables {
   const long rows, cols, longCol, latCol;
   double halfVertSmallestIncrement, halfHorSmallestIncrement;
   // Uses last coordinate (position in covariates matrix) to retrieve covariates.
-  Eigen::VectorXd getVariablesVec(const Eigen::VectorXd& coordinates,
+  Eigen::VectorXd getVariablesVec(const Eigen::MatrixXd& coordinates,
                                   std::vector<int> columns) {
     Eigen::VectorXd out(columns.size());
     for (int j = 0; j < columns.size(); j++)
-      out(j) = data[columns[j] * rows + (long)coordinates(2)];
+      out(j) = data[columns[j] * rows + (long)coordinates(0, 2)];
     return out;
   }
 public:
@@ -184,9 +187,9 @@ public:
   // Third coordinate is the random row. Used later to retrieve covariates values easily in getVariablesVec().
   Eigen::VectorXd getRandomPoint() {
     Eigen::VectorXd out(3);
-    long selectedRow = long(R::runif(0, 1) * rows);
-    out(0) = data[longCol * rows + selectedRow] + R::runif(-1, 1) * halfHorSmallestIncrement;
-    out(1) = data[latCol * rows + selectedRow] + R::runif(-1, 1) * halfVertSmallestIncrement;
+    long selectedRow = long(runif(0, 1) * rows);
+    out(0) = data[longCol * rows + selectedRow] + runif(-1, 1) * halfHorSmallestIncrement;
+    out(1) = data[latCol * rows + selectedRow] + runif(-1, 1) * halfVertSmallestIncrement;
     out(2) = selectedRow;
     return out;
   }

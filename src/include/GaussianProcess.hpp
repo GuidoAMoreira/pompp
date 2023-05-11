@@ -21,9 +21,9 @@ public:
   // setters
   void setCovFunction(CovarianceFunction* c) {covFun = c;}
 
-  GaussianProcess(int s) : xSize(s) {}
   GaussianProcess(Eigen::MatrixXd pos, int s,
                   CovarianceFunction* cf) : xSize(s),
+                  baseDistsCovs(calcDistances(pos)),
   positions(pos.leftCols(2)),
   values(rnorm(xSize)),
   covFun(cf) {augmentedValues = values;}
@@ -43,6 +43,7 @@ public:
   virtual void closeUp();
 protected:
   const int xSize; // Used in start up and close up
+  Eigen::MatrixXd baseDistsCovs;
   int tempAcc; // Used in start up and close up
   int parameterSize, currentIndex;
   Eigen::MatrixXd positions, covariances, augmentedPositions, augmentedCovariances;
@@ -54,8 +55,10 @@ protected:
   // Proposed point
   Eigen::VectorXd propCovariances;
   double propValue;
+  Eigen::VectorXd propValues;
 
   double calcDist(Eigen::VectorXd p1, Eigen::VectorXd p2);
+  Eigen::MatrixXd calcDistances(const Eigen::MatrixXd& coords);
 };
 
 class NNGP : public GaussianProcess {
@@ -73,8 +76,9 @@ class NNGP : public GaussianProcess {
   Eigen::SparseMatrix<double> IminusA, precision;
   std::vector<Eigen::Triplet<double> > trips;
   Eigen::SimplicialLLT<Eigen::SparseMatrix<double> > sqrtC;
+  Eigen::LDLT<Eigen::MatrixXd> miniSolver;
   Eigen::MatrixXi pastCovariancesPositions;
-  Eigen::MatrixXd pastCovariances, propPrecision;
+  Eigen::MatrixXd pastCovariances, propPrecision, propPositions, distMat;
   int thisPosition;
   double propD;
 

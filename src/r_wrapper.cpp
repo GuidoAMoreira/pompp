@@ -35,7 +35,7 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
   omp_set_num_threads( threads );
 #endif
 
-  // Auxiliary
+  // Auxiliary. Contains covariates at the observed points
   Eigen::MatrixXd xInt(xValues.rows(), xIntensityCovs.size());
   for (i = 0; i < xValues.rows(); i++)
     for (j = 0; j < xIntensityCovs.size(); j++)
@@ -69,8 +69,8 @@ List cppPOMPP(Eigen::VectorXd beta, Eigen::VectorXd delta,
   PresenceOnly mc(
     xPositions, xInt, xObs,
     new MatrixVariables(
-      std::vector<int>(&intensityCovs[0], intensityCovs.data() + intensityCovs.size()),
-      std::vector<int>(&observabilityCovs[0], observabilityCovs.data() + observabilityCovs.size()),
+      std::vector<int>(intensityCovs.data(), intensityCovs.data() + intensityCovs.size()),
+      std::vector<int>(observabilityCovs.data(), observabilityCovs.data() + observabilityCovs.size()),
       covariates, longCol, latCol,
       new NNGP(xPositions, xPositions.rows(), neighborhoodSize,
                new PowerExponentialCovariance(maxDist, phi, 1, sigma2))

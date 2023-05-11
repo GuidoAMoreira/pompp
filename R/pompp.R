@@ -200,20 +200,22 @@ methods::setMethod("fit_pompp",
                          s("observabilitySelection") - 1, # po obserability columns
                          1, fitted$sigmasq, fitted$phi,
                          neighborhoodSize,
-                         s("coordinates")[1], s("coordinates")[2],
+                         s("coordinates")[1] - 1, s("coordinates")[2] - 1,
                          mcmc_setup$burnin, # MCMC burn-in
                          mcmc_setup$thin, # MCMC thin
                          mcmc_setup$iter, # MCMC iterations
                          cores, verbose)
                        #heatMap <- heatMap + temp$xPrimePred # Not available yet
-                       mcmcRun[[c]] <- do.call(cbind, temp[-length(temp)])
+                       mcmcRun[[c]] <- do.call(cbind, temp[-length(temp)]) # Removing logPosterior for now
                        colnames(mcmcRun[[c]]) <- parnames
                        mcmcRun[[c]] <- coda::mcmc(mcmcRun[[c]], thin = mcmc_setup$thin)
-                       if (chains > 1 && verbose) cat("Finished chain ",c,".\n\n",sep="")
+                       if (chains > 1 && verbose)
+                         cat("Finished chain ", c, ".\n\n", sep="")
                      }
-                     if (chains > 1 && verbose) cat("Total computation time: ", format(unclass(Sys.time()-time),
-                                                                                       digits = 2), " ",
-                                                    attr(Sys.time() - time, "units"), ".\n", sep="")
+                     if (chains > 1 && verbose)
+                       cat("Total computation time: ",
+                           format(unclass(Sys.time()-time), digits = 2), " ",
+                           attr(Sys.time() - time, "units"), ".\n", sep="")
 
                      return(methods::new("pompp_fit",
                                          fit = do.call(coda::mcmc.list, mcmcRun),
@@ -561,3 +563,4 @@ pompp_model = function(po, intensitySelection,
 
   return(output)
 }
+
