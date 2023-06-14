@@ -103,7 +103,9 @@ methods::setGeneric("fit_pompp", function(object, background,
 methods::setMethod("fit_pompp",
                    methods::signature(object = "pompp_model",
                                       background = "matrix"),
-                   function(object, background, neighborhoodSize = 20, mcmc_setup, verbose = TRUE, area = 1, cores = parallel::detectCores(), ...){
+                   function(object, background, neighborhoodSize = 20,
+                            mcmc_setup, verbose = TRUE, area = 1,
+                            cores = parallel::detectCores(), ...){
                      ## Verifying background names if columns are selected by column name. Crewating background selection variables
                      backConfig <- checkFormatBackground(object, background)
 
@@ -119,14 +121,21 @@ methods::setMethod("fit_pompp",
                      mcmc_setup$burnin <- as.numeric(mcmc_setup$burnin)
                      mcmc_setup$thin <- as.numeric(mcmc_setup$thin)
                      mcmc_setup$iter <- as.numeric(mcmc_setup$iter)
-                     stopifnot("iter" %in% names(mcmc_setup), !is.na(mcmc_setup$burnin),
-                               length(mcmc_setup$burnin) == 1, mcmc_setup$burnin == floor(mcmc_setup$burnin),
-                               mcmc_setup$burnin >= 0, !is.na(mcmc_setup$thin), length(mcmc_setup$thin) == 1,
-                               mcmc_setup$thin == floor(mcmc_setup$thin), mcmc_setup$thin > 0,
-                               !is.na(mcmc_setup$iter), length(mcmc_setup$iter) == 1,
-                               mcmc_setup$iter == floor(mcmc_setup$iter), mcmc_setup$iter > 0,
+                     stopifnot("iter" %in% names(mcmc_setup),
+                               !is.na(mcmc_setup$burnin),
+                               length(mcmc_setup$burnin) == 1,
+                               mcmc_setup$burnin == floor(mcmc_setup$burnin),
+                               mcmc_setup$burnin >= 0, !is.na(mcmc_setup$thin),
+                               length(mcmc_setup$thin) == 1,
+                               mcmc_setup$thin == floor(mcmc_setup$thin),
+                               mcmc_setup$thin > 0,
+                               !is.na(mcmc_setup$iter),
+                               length(mcmc_setup$iter) == 1,
+                               mcmc_setup$iter == floor(mcmc_setup$iter),
+                               mcmc_setup$iter > 0,
                                mcmc_setup$iter >= mcmc_setup$thin,
-                               cores > 0, cores == floor(cores), length(cores) == 1,
+                               cores > 0, cores == floor(cores),
+                               length(cores) == 1,
                                cores <= parallel::detectCores())
                      ## Verifying mcmc_setup - end
 
@@ -165,21 +174,20 @@ methods::setMethod("fit_pompp",
                      )
 
                      time <- Sys.time()
-                     mcmcRun <- list()
-                     heatMap <- rep(0, nrow(background))
+                     mcmcRun <- vector(mode = "list", length = chains)
+                     # heatMap <- rep(0, nrow(background))
                      for (c in 1:chains){
-                       if (chains > 1 && verbose) cat("Starting chain ", c, ".\n",sep="")
+                       if (chains > 1 && verbose) cat("Starting chain ", c,
+                                                      ".\n",sep="")
                        temp <- cppPOMPP(
-                         methods::slot(s("init")[[c]], "beta"),
+                         methods::slot(s("init")[[c]], "beta"), # Init beta
                          methods::slot(s("init")[[c]], "delta"), # Init delta
                          methods::slot(s("init")[[c]], "lambdaStar"), # Init lambdaStar
                          "",
                          "",
                          "",
-                         retrievePars(methods::slot( # beta prior parameters
-                           s("prior"),"beta")),
-                         retrievePars(methods::slot( # delta prior parameters
-                           s("prior"),"delta")),
+                         retrievePars(methods::slot(s("prior"),"beta")),
+                         retrievePars(methods::slot(s("prior"),"delta")),
                          methods::slot(s("prior"), "lambdaStar")$shape,
                          methods::slot(s("prior"), "lambdaStar")$rate,
                          "",
@@ -192,29 +200,32 @@ methods::setMethod("fit_pompp",
                          methods::slot(s("prior"), "marksMean")$Sigma,
                          methods::slot(s("prior"), "marksPrecision")$shape,
                          methods::slot(s("prior"), "marksPrecision")$rate,
-                         s("po"), s("po")[, s("marksSelection")], # po data
+                         s("po"), # po covariates
+                         s("po")[, s("marksSelection")],
                          s("po")[, s("coordinates")],
-                         backConfig$bIS - 1, # background intensity columns
-                         backConfig$bOS - 1, # background observability colmns
-                         s("intensitySelection") - 1, # po intensity columns
-                         s("observabilitySelection") - 1, # po obserability columns
-                         1, fitted$sigmasq, fitted$phi,
-                         neighborhoodSize,
-                         s("coordinates")[1] - 1, s("coordinates")[2] - 1,
-                         mcmc_setup$burnin, # MCMC burn-in
-                         mcmc_setup$thin, # MCMC thin
-                         mcmc_setup$iter, # MCMC iterations
-                         cores, verbose)
+                         as.integer(backConfig$bIS - 1), # background intensity columns
+                         as.integer(backConfig$bOS - 1), # background observability colmns
+                         as.integer(s("intensitySelection") - 1), # po intensity columns
+                         as.integer(s("observabilitySelection") - 1), # po obserability columns
+                         sqrt(2), fitted$sigmasq, fitted$phi,
+                         as.integer(neighborhoodSize),
+                         as.integer(s("coordinates")[1] - 1),
+                         as.integer(s("coordinates")[2] - 1),
+                         as.integer(mcmc_setup$burnin), # MCMC burn-in
+                         as.integer(mcmc_setup$thin), # MCMC thin
+                         as.integer(mcmc_setup$iter), # MCMC iterations
+                         as.integer(cores), verbose)
                        #heatMap <- heatMap + temp$xPrimePred # Not available yet
                        mcmcRun[[c]] <- do.call(cbind, temp[-length(temp)]) # Removing logPosterior for now
                        colnames(mcmcRun[[c]]) <- parnames
-                       mcmcRun[[c]] <- coda::mcmc(mcmcRun[[c]], thin = mcmc_setup$thin)
+                       mcmcRun[[c]] <- coda::mcmc(mcmcRun[[c]],
+                                                  thin = mcmc_setup$thin)
                        if (chains > 1 && verbose)
                          cat("Finished chain ", c, ".\n\n", sep="")
                      }
                      if (chains > 1 && verbose)
                        cat("Total computation time: ",
-                           format(unclass(Sys.time()-time), digits = 2), " ",
+                           format(unclass(Sys.time() - time), digits = 2), " ",
                            attr(Sys.time() - time, "units"), ".\n", sep="")
 
                      return(methods::new("pompp_fit",
@@ -459,7 +470,7 @@ checkFormatBackground <- function(object, background){
 #'   initial_values = 2, joint_prior = prior(
 #'     NormalPrior(rep(0, 2), 10 * diag(2)),
 #'     NormalPrior(rep(0, 3), 10 * diag(3)),
-#'     GammaPrior(1e-4, 1e-4),
+#'     GammaPrior(1e-2, 1e-2),
 #'     NormalPrior(0, 100), GammaPrior(0.001, 0.001)))
 #' # Check how it is.
 #' model

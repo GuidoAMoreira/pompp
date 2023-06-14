@@ -6,6 +6,8 @@
 #include "BackgroundVariables.hpp"
 #include "RegressionPrior.hpp"
 
+#define MAX_ATTEMPTS_GP 1000
+
 class PresenceOnly : public MarkovChain {
   // States
   // Regression members
@@ -64,7 +66,7 @@ public:
     xprimeObservability = Eigen::MatrixXd(0, 0);
     uIntensity = Eigen::MatrixXd(0, 0);
   }
-  virtual ~PresenceOnly();
+  ~PresenceOnly() {delete beta; delete delta; delete bkg;}
 
   // Getters
   Eigen::VectorXd getBeta() {return beta->getBeta();}

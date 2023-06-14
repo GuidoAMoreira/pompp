@@ -9,20 +9,44 @@
 
 void GaussianProcess::sampleNewPoint(Eigen::VectorXd coords, double& mark,
                                      double nugget, double mu) {
-//   Eigen::LLT<Eigen::MatrixXd> solver;
-//   Eigen::VectorXd temp;
-//   propCovariances = Eigen::VectorXd(augmentedPositions.rows());
-//
-// #pragma omp parallel for
-//   for (int i = 0; i < augmentedPositions.rows(); i++) {
-//     propCovariances(i) = (*covFun)(calcDist(augmentedPositions.row(i).transpose(),
-//                           coords));
-//   }
-//   solver.compute(augmentedCovariances);
-//   temp = solver.solve(propCovariances);
-//
-//   propValue = rnorm(temp.transpose() * augmentedValues,
-//                        covFun->getSigma2() - propCovariances.transpose() * temp);
+  Eigen::LLT<Eigen::MatrixXd> solver;
+  Eigen::VectorXd temp;
+  propCovariances = Eigen::VectorXd(augmentedPositions.rows());
+
+#pragma omp parallel for
+  for (int i = 0; i < augmentedPositions.rows(); i++) {
+    propCovariances(i) = (*covFun)(calcDist(augmentedPositions.row(i).transpose(),
+                          coords));
+  }
+  solver.compute(augmentedCovariances);
+  temp = solver.solve(propCovariances);
+
+  propValue = rnorm(temp.transpose() * augmentedValues,
+                       covFun->getSigma2() - propCovariances.transpose() * temp);
+}
+
+double GaussianProcess::updateCovarianceParameters() {
+  int estimSize = covFun->getParSize();
+  std::vector<double> props(estimSize);
+
+#pragma omp parallel for
+  for (int i = 0; i < estimSize; i++) {
+    int attempts = 0;
+    do {
+      props[i] = rnorm(covFun->getPar(i), 0.1);
+    } while (props[i] <= 0 && ++attempts <= 100);
+    if (attempts == 100) {
+      Rf_warning("Covariance parameter attempts reached max attempts.");
+      props[i] = covFun->getPar(i);
+    }
+  }
+
+  Eigen::MatrixXd propPrec = recalcPrecision(props);
+  double newDensity = -0.5 * (values.transpose() * propPrec * values - log(propPrec.determinant()));
+  if (log(runif()) <= newDensity - logDensity) {
+    for (int i = 0; i < estimSize; i++) covFun->setPar(props[i], i);
+    return newDensity;
+  } else return logDensity;
 }
 
 Eigen::MatrixXd GaussianProcess::recalcPrecision(std::vector<double> newParams) {
@@ -69,15 +93,6 @@ inline double GaussianProcess::calcDist(Eigen::VectorXd p1, Eigen::VectorXd p2) 
   return hypot(temp(0), temp(1));
 }
 
-Eigen::MatrixXd GaussianProcess::calcDistances(const Eigen::MatrixXd& coords) {
-  Eigen::MatrixXd output(coords.rows(), coords.rows());
-  for (int i = 0; i < coords.rows(); i++)
-    for (int j = 0; j < i; j++)
-      output(i, j) = calcDist(coords.row(i).transpose(), coords.row(j).transpose());
-
-  return output;
-}
-
 void GaussianProcess::resampleGP(double marksMu, double marksVariance,
                                  const Eigen::VectorXd& xMarks, Eigen::VectorXd& xPrimeMarks,
                                  const Eigen::VectorXd& betasPart, const Eigen::VectorXd& pgs,
@@ -106,16 +121,15 @@ void NNGP::sampleNewPoint(Eigen::VectorXd coords, double& mark,
 #pragma omp parallel for private(finder)
   for (int i = 0; i < neighborhoodSize; i++) {
     for (int j = 0; j < i; j++) {
-      for (finder = 0; finder < neighborhoodSize; finder++) {
+      for (finder = 0; finder < neighborhoodSize; finder++)
         if (pastCovariancesPositions(neighborhood[i], finder) ==
             neighborhood[j]) break;
-        }
-      propPrecision(i, j) = finder < neighborhoodSize ?
-        pastCovariances(neighborhood[i], finder) :
-        propPrecision(i, j) = (*covFun)(calcDist(augmentedPositions.row(neighborhood[i]).transpose(),
-                               augmentedPositions.row(neighborhood[j]).transpose()));
-      propPrecision(j, i) = propPrecision(i, j);
-    } // for j
+        propPrecision(i, j) = finder < neighborhoodSize ?
+          pastCovariances(neighborhood[i], finder) :
+          propPrecision(i, j) = (*covFun)(calcDist(augmentedPositions.row(neighborhood[i]).transpose(),
+                                 augmentedPositions.row(neighborhood[j]).transpose()));
+        propPrecision(j, i) = propPrecision(i, j);
+    }
     propPrecision(i, i) = covFun->getSigma2();
     theseCovariances(i) = (*covFun)(distances(neighborhood[i]));
   }
@@ -229,10 +243,10 @@ void NNGP::bootUpIminusA() {
     }
     covariances(i, i) = covFun->getSigma2();
   }
+  Eigen::LDLT<Eigen::MatrixXd> miniSolver;
 
   miniSolver.compute(covariances);
-  Eigen::MatrixXd miniIminusA = miniSolver.matrixL().solve(
-    Eigen::MatrixXd::Identity(neighborhoodSize, neighborhoodSize));
+  Eigen::MatrixXd miniIminusA = miniSolver.matrixL().solve(Eigen::MatrixXd::Identity(neighborhoodSize, neighborhoodSize));
   for (i = 0; i < neighborhoodSize; i++) {
     for (j = 0; j < i; j++)
       trips.push_back(Eigen::Triplet<double>(i, j, miniIminusA(i, j)));
@@ -244,10 +258,8 @@ void NNGP::bootUpIminusA() {
         pastCovariancesPositions(i, j) = j;
         pastCovariances(i, j) = covariances(i, j);
       } else {
-        pastCovariancesPositions(i, j) = i;
-        pastCovariances(i, j) = covFun->getSigma2();
-        // pastCovariancesPositions(i, j) = -1;
-        // pastCovariances(i, j) = 0;
+        pastCovariancesPositions(i, j) = -1;
+        pastCovariances(i, j) = 0;
       }
     }
   }

@@ -38,7 +38,7 @@ double PresenceOnly::sampleProcesses() {
   marksPrime = Eigen::VectorXd(totalPoints);
   bkg->startGPs(totalPoints);
   for (int i = 0; i < totalPoints; i++) {
-//#pragma omp critical
+#pragma omp critical
     R_CheckUserInterrupt();
     candidate = bkg->getRandomPoint();
     uniform = log(runif(0, 1));
@@ -60,11 +60,12 @@ double PresenceOnly::sampleProcesses() {
   }
   bkg->setGPinStone();
 
+  marksPrime.conservativeResize(accXp);
+
   xxprimeIntensity.resize(x.rows() + accXp, beta->getSize() - 1);
   xxprimeIntensity.topRows(x.rows()) = xIntensity;
 
   if (accXp) {
-    marksPrime.conservativeResize(accXp);
     xprime = storingCoords.topRows(accXp);
     xxprimeIntensity.bottomRows(accXp) =
       bkg->getVarMat(xprime, INTENSITY_VARIABLES);
@@ -74,7 +75,6 @@ double PresenceOnly::sampleProcesses() {
     xprimeObservability.rightCols(1) =
       bkg->getGP(OBSERVABILITY_VARIABLES);
   } else {
-    marksPrime.resize(0);
     xprime.resize(0, 3);
     xprimeObservability.resize(0, delta->getSize() - 1);
   }
@@ -91,6 +91,8 @@ double PresenceOnly::sampleProcesses() {
 }
 
 double PresenceOnly::updateMarksPars(const Eigen::VectorXd& gp) {
+  double sqrtMarksNugget = sqrt(marksNugget);
+
   Eigen::VectorXd logMarks = -gp;
   logMarks.head(x.rows()) += marks.array().log().matrix();
   logMarks.tail(xprime.rows()) += marksPrime.array().log().matrix();
@@ -113,7 +115,8 @@ double PresenceOnly::updateMarksPars(const Eigen::VectorXd& gp) {
 
 inline double PresenceOnly::applyTransitionKernel() {
   double out, privateOut1, privateOut2;
-  out = sampleProcesses() + updateLambdaStar();
+  out = sampleProcesses();
+  out += updateLambdaStar();
 #pragma omp parallel
 {
 #pragma omp sections
@@ -132,4 +135,3 @@ inline double PresenceOnly::applyTransitionKernel() {
   return out + privateOut1 + privateOut2;
 }
 
-PresenceOnly::~PresenceOnly() {delete beta; delete delta; delete bkg;}

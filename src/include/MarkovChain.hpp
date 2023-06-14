@@ -4,6 +4,7 @@
 // Abstract class meant to be used for MCMC calculations
 
 #include <R.h>
+#include <vector>
 //#include "MCMCprogress.hpp"
 
 class MarkovChain {
@@ -11,8 +12,10 @@ class MarkovChain {
   unsigned int iteration;
 //  MCMCprogress* progressBar;
 
-  virtual double applyTransitionKernel() = 0; // returns log posterior
-  void doNothing();
+  // States
+  std::vector<long> discreteStates;
+  std::vector<double> continuousStates;
+
 public:
 //  MarkovChain() : iteration(0), progressBar(new MCMCprogress()) {}
   MarkovChain() : iteration(0) {}
@@ -33,6 +36,9 @@ public:
   // Getters
   double getLogPosterior() {return logPosterior;}
   unsigned int getIteration() {return iteration;}
+
+protected:
+  virtual double applyTransitionKernel() = 0; // returns log posterior
 };
 
 #endif

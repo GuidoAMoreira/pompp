@@ -114,7 +114,7 @@ model <- pompp_model(po = cbind(po_Z, po_W, po_points, po_marks),
   initial_values = 2, joint_prior = prior(
     NormalPrior(rep(0, 2), 10 * diag(2)),
     NormalPrior(rep(0, 3), 10 * diag(3)),
-    GammaPrior(1e-4, 1e-4),
+    GammaPrior(1e-2, 1e-2),
     NormalPrior(0, 100), GammaPrior(0.001, 0.001)))
 # Check how it is.
 model
